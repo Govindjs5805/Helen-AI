@@ -3,7 +3,7 @@
 -- post-registration wizard. This drives every other module (UI adaptation,
 -- content simplification, pacing, etc.).
 
--- Enums -------------------------------------------------------------------
+
 
 do $$
 begin

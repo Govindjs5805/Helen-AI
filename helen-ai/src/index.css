@@ -8,6 +8,7 @@
   --color-text: #16261E;
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-heading: 'Sora', serif;
+  --font-dyslexia: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
 }
 
 :root.dark {
@@ -49,4 +50,58 @@ h6 { font-size: 0.875rem; }
   h1 { font-size: 3.5rem; }
   h2 { font-size: 2.5rem; }
   h3 { font-size: 2rem; }
+}
+
+/* -------------------------------------------------------------------------
+   Accessibility profile — toggled at <html> by useAccessibilityProfile
+   ------------------------------------------------------------------------- */
+
+/* Dyslexia: more open line-height, looser letter-spacing, dyslexia-friendly font */
+:root.dyslexia-mode body {
+  font-family: var(--font-dyslexia);
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+}
+:root.dyslexia-mode p,
+:root.dyslexia-mode li,
+:root.dyslexia-mode label,
+:root.dyslexia-mode input,
+:root.dyslexia-mode textarea,
+:root.dyslexia-mode button {
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+}
+:root.dyslexia-mode h1,
+:root.dyslexia-mode h2,
+:root.dyslexia-mode h3,
+:root.dyslexia-mode h4 {
+  letter-spacing: 0;
+  line-height: 1.4;
+}
+
+/* ADHD: kill entrance animations and extra transitions */
+:root.adhd-mode *,
+:root.adhd-mode *::before,
+:root.adhd-mode *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+}
+
+/* Visual impairment: bump base font size, larger tap targets */
+:root.vi-mode {
+  font-size: 112.5%; /* 18px if root was 16px */
+}
+:root.vi-mode button,
+:root.vi-mode a,
+:root.vi-mode [role="button"],
+:root.vi-mode input[type="checkbox"],
+:root.vi-mode input[type="radio"] {
+  min-height: 44px;
+}
+:root.vi-mode button,
+:root.vi-mode a {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
 }

@@ -4,6 +4,16 @@ import { OnboardingGuard } from '@/components/OnboardingGuard'
 import { Auth } from '@/pages/Auth'
 import { Onboarding } from '@/pages/Onboarding'
 import { Dashboard } from '@/pages/Dashboard'
+import { AppShell } from '@/components/layout/AppShell'
+import { AIAssistant } from '@/pages/AIAssistant'
+import { Documents } from '@/pages/Documents'
+import { Notes } from '@/pages/Notes'
+import { Progress, StudentProgress } from '@/pages/Progress'
+import { Classrooms } from '@/pages/Classrooms'
+import { Assignments } from '@/pages/Assignments'
+import { MyChild } from '@/pages/MyChild'
+import { Users } from '@/pages/Users'
+import { Reports } from '@/pages/Reports'
 
 function RootRedirect() {
   const { session, profile, loading } = useAuth()
@@ -28,7 +38,109 @@ export default function App() {
         path="/dashboard"
         element={
           <OnboardingGuard>
-            <Dashboard />
+            <AppShell>
+              <Dashboard />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/ai-assistant"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <AIAssistant />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/documents"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Documents />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/notes"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Notes />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/progress"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Progress />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/classrooms"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Classrooms />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/assignments"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Assignments />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/student-progress"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <StudentProgress />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/my-child"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <MyChild />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/users"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Users />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Reports />
+            </AppShell>
           </OnboardingGuard>
         }
       />

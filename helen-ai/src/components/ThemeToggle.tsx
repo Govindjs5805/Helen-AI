@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 
-export function ThemeToggle() {
+export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme } = useTheme()
   const [isAnimating, setIsAnimating] = useState(false)
 
@@ -20,7 +20,7 @@ export function ThemeToggle() {
     <button
       onClick={handleClick}
       disabled={isAnimating}
-      className="relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white/50 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+      className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white/50 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${className}`}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
     >
       <AnimatePresence mode="wait" initial={false}>

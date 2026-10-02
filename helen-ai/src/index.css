@@ -11,6 +11,24 @@
   --font-dyslexia: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
 }
 
+/* ---------------------------------------------------------------------------
+   Theme CSS custom properties (updated by ThemeContext at runtime)
+   --------------------------------------------------------------------------- */
+:root {
+  --font-family: 'Inter', system-ui, sans-serif;
+  --font-size-multiplier: 1;
+  --font-letter-spacing: 0;
+  --font-line-height: 1.5;
+
+  --layout-reduced-motion: false;
+  --layout-single-focus-layout: false;
+  --layout-large-touch-targets: false;
+  --layout-captions-always-on: false;
+  --layout-visual-notifications: false;
+  --layout-forces-own-contrast: false;
+  font-size: calc(16px * var(--font-size-multiplier));
+}
+
 :root.dark {
   --color-background: #0B120D;
   --color-surface: #131B15;
@@ -22,15 +40,19 @@
 body {
   background-color: var(--color-background);
   color: var(--color-text);
-  font-family: var(--font-sans);
+  font-family: var(--font-family);
+  font-size: 1rem;
+  letter-spacing: var(--font-letter-spacing);
+  line-height: var(--font-line-height);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-heading);
+  font-family: var(--font-family);
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--font-letter-spacing);
+  line-height: var(--font-line-height);
 }
 
 h1 { font-size: 2.5rem; }
@@ -52,56 +74,55 @@ h6 { font-size: 0.875rem; }
   h3 { font-size: 2rem; }
 }
 
-/* -------------------------------------------------------------------------
-   Accessibility profile — toggled at <html> by useAccessibilityProfile
-   ------------------------------------------------------------------------- */
-
-/* Dyslexia: more open line-height, looser letter-spacing, dyslexia-friendly font */
-:root.dyslexia-mode body {
-  font-family: var(--font-dyslexia);
-  line-height: 1.75;
-  letter-spacing: 0.02em;
-}
-:root.dyslexia-mode p,
-:root.dyslexia-mode li,
-:root.dyslexia-mode label,
-:root.dyslexia-mode input,
-:root.dyslexia-mode textarea,
-:root.dyslexia-mode button {
-  line-height: 1.75;
-  letter-spacing: 0.02em;
-}
-:root.dyslexia-mode h1,
-:root.dyslexia-mode h2,
-:root.dyslexia-mode h3,
-:root.dyslexia-mode h4 {
-  letter-spacing: 0;
-  line-height: 1.4;
-}
-
-/* ADHD: kill entrance animations and extra transitions */
-:root.adhd-mode *,
-:root.adhd-mode *::before,
-:root.adhd-mode *::after {
+/* Preset layout flags use the same root attribute as the theme tokens. */
+:root[data-reduced-motion="true"] *,
+:root[data-reduced-motion="true"] *::before,
+:root[data-reduced-motion="true"] *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
   transition-delay: 0ms !important;
 }
 
-/* Visual impairment: bump base font size, larger tap targets */
-:root.vi-mode {
-  font-size: 112.5%; /* 18px if root was 16px */
+:root[data-single-focus-layout="true"] .dashboard-quick-access > a:not(:first-child) {
+  display: none;
 }
-:root.vi-mode button,
-:root.vi-mode a,
-:root.vi-mode [role="button"],
-:root.vi-mode input[type="checkbox"],
-:root.vi-mode input[type="radio"] {
+
+:root[data-large-touch-targets="true"] button,
+:root[data-large-touch-targets="true"] a,
+:root[data-large-touch-targets="true"] [role="button"],
+:root[data-large-touch-targets="true"] input[type="checkbox"],
+:root[data-large-touch-targets="true"] input[type="radio"] {
   min-height: 44px;
 }
-:root.vi-mode button,
-:root.vi-mode a {
+:root[data-large-touch-targets="true"] button,
+:root[data-large-touch-targets="true"] a {
   padding-top: 0.625rem;
   padding-bottom: 0.625rem;
+}
+
+:root[data-profile="hearing_impairment"] [data-visual-notification] {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Keep legacy hardcoded utilities legible in forced black/yellow contrast. */
+:root[data-forces-own-contrast="true"] body,
+:root[data-forces-own-contrast="true"] body :where(*) {
+  color: var(--color-text) !important;
+  border-color: color-mix(in srgb, var(--color-text) 55%, transparent) !important;
+}
+:root[data-forces-own-contrast="true"] body :where([class*="bg-white"], [class*="bg-gray-"], [class*="bg-slate-"], [class*="bg-emerald-"], [class*="bg-red-"]) {
+  background-color: var(--color-surface) !important;
+}
+:root[data-forces-own-contrast="true"] body :where(.bg-primary, .bg-primary *) {
+  color: #000000 !important;
+}
+:root.dark:not([data-forces-own-contrast="true"]) body :where(.bg-primary, .bg-primary *) {
+  color: #0B120D !important;
+}
+:root[data-forces-own-contrast="true"] input::placeholder,
+:root[data-forces-own-contrast="true"] textarea::placeholder {
+  color: var(--color-text) !important;
+  opacity: 0.7;
 }

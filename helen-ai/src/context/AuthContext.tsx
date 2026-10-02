@@ -57,6 +57,7 @@ function profileFromSession(
     email: user.email ?? '',
     full_name: (meta.full_name as string) ?? '',
     role,
+    student_id: null,
     created_at: user.created_at ?? new Date().toISOString(),
   }
 }

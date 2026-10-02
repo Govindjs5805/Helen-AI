@@ -14,6 +14,8 @@ import { Assignments } from '@/pages/Assignments'
 import { MyChild } from '@/pages/MyChild'
 import { Users } from '@/pages/Users'
 import { Reports } from '@/pages/Reports'
+import { ThemePreview } from '@/pages/dev/ThemePreview'
+import { DocumentSimplifierPreview } from '@/pages/dev/DocumentSimplifierPreview'
 
 function RootRedirect() {
   const { session, profile, loading } = useAuth()
@@ -33,6 +35,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/dev/theme-preview" element={<ThemePreview />} />
+      <Route path="/dev/document-simplifier" element={<DocumentSimplifierPreview />} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route
         path="/dashboard"

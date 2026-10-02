@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
-  const { theme, toggleTheme } = useTheme()
+  const { theme, toggleTheme, hideThemeToggle } = useTheme()
   const [isAnimating, setIsAnimating] = useState(false)
 
   const handleClick = () => {
@@ -17,38 +17,45 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
   const isDark = theme === 'dark'
 
   return (
-    <button
-      onClick={handleClick}
-      disabled={isAnimating}
-      className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white/50 backdrop-blur-sm transition-colors hover:bg-white/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${className}`}
-      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+    <span
+      className={`relative inline-flex ${className}`}
+      title={hideThemeToggle ? 'Optimized for visual accessibility' : undefined}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {isDark ? (
-          <motion.span
-            key="sun"
-            initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="text-yellow-400"
-          >
-            <SunIcon />
-          </motion.span>
-        ) : (
-          <motion.span
-            key="moon"
-            initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
-            animate={{ rotate: 0, opacity: 1, scale: 1 }}
-            exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
-            transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="text-gray-700"
-          >
-            <MoonIcon />
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </button>
+      <button
+        onClick={handleClick}
+        disabled={isAnimating || hideThemeToggle}
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-text/25 bg-surface text-text transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        aria-label={hideThemeToggle
+          ? 'Optimized for visual accessibility'
+          : isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {isDark ? (
+            <motion.span
+              key="sun"
+              initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="text-yellow-400"
+            >
+              <SunIcon />
+            </motion.span>
+          ) : (
+            <motion.span
+              key="moon"
+              initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
+              animate={{ rotate: 0, opacity: 1, scale: 1 }}
+              exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="text-gray-700"
+            >
+              <MoonIcon />
+            </motion.span>
+          )}
+        </AnimatePresence>
+      </button>
+    </span>
   )
 }
 

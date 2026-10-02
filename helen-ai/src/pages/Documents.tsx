@@ -1,11 +1,5 @@
-import { Placeholder } from './Placeholder'
+import { DocumentSimplifier } from './student/DocumentSimplifier'
 
 export function Documents() {
-  return (
-    <Placeholder
-      title="Document Simplifier"
-      description="AI-powered explanation of your documents"
-      icon="📄"
-    />
-  )
+  return <DocumentSimplifier />
 }

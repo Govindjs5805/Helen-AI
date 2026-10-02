@@ -7,6 +7,8 @@ import { SubjectTags } from '@/components/SubjectTags'
 import { PaceSelector } from '@/components/PaceSelector'
 import { supabase } from '@/services/supabase'
 import { useAuth } from '@/context/AuthContext'
+import { getPresetName, getThemeTokens } from '@/theme/presets'
+import { useTheme } from '@/context/ThemeContext'
 import type {
   OnboardingSubmitData,
   AccessibilityNeedType,
@@ -29,6 +31,7 @@ const NEED_OPTIONS: { value: AccessibilityNeedType; label: string; description: 
   { value: 'hearing_impairment', label: 'Hearing', description: 'Difficulty hearing audio' },
   { value: 'motor_impairment', label: 'Motor', description: 'Fine motor control is limited' },
   { value: 'other_learning_disability', label: 'Something else', description: "Doesn't fit neatly into one category" },
+  { value: 'learning_disability', label: 'Learning disability', description: 'General learning differences' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -532,8 +535,13 @@ function Step2({
   onNext,
   onBack,
 }: Step2Props) {
+  const { theme } = useTheme()
   const needsArray = Array.from(selectedNeeds)
   const showPriority = needsArray.length >= 2
+
+  const previewTokens = primaryNeed
+    ? getThemeTokens(getPresetName(primaryNeed), theme)
+    : null
 
   return (
     <div className="space-y-8">
@@ -635,6 +643,56 @@ function Step2({
                 </button>
               )
             })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Live theme preview — shows what the UI will look like with this primary need */}
+      {primaryNeed && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-3 rounded-xl border border-black/10 bg-surface p-5 dark:border-white/10"
+        >
+          <h3 className="font-heading text-sm font-semibold text-text">
+            Live preview of your theme
+          </h3>
+          <p className="text-xs text-text/60">
+            Here's what your Helen AI experience will look like with this primary need selected.
+          </p>
+
+          {/* Miniature sample card using the target palette */}
+          <div
+            className="rounded-lg p-4"
+            style={{
+              backgroundColor: previewTokens?.colors.background,
+              color: previewTokens?.colors.text,
+              fontFamily: previewTokens?.font.family,
+              fontSize: `calc(16px * ${previewTokens?.font.sizeMultiplier ?? 1})`,
+              letterSpacing: previewTokens?.font.letterSpacing,
+              lineHeight: previewTokens?.font.lineHeight,
+            }}
+          >
+            <h4
+              className="font-heading font-bold text-lg mb-2"
+              style={{
+                color: previewTokens?.colors.text,
+                fontFamily: previewTokens?.font.family,
+              }}
+            >
+              Sample Heading
+            </h4>
+            <p className="text-sm mb-3" style={{ color: previewTokens?.colors.text }}>
+              This is what your learning experience will feel like. The colors,
+              font size, and spacing adapt to your needs.
+            </p>
+            <button
+              className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90"
+              style={{ backgroundColor: previewTokens?.colors.primary, color: previewTokens?.colors.background }}
+            >
+              Sample Button
+            </button>
           </div>
         </motion.div>
       )}

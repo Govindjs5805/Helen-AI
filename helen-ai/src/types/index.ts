@@ -7,6 +7,7 @@ export interface Profile {
   email: string
   full_name: string
   role: UserRole
+  student_id?: string | null
   created_at: string
 }
 
@@ -37,6 +38,7 @@ export type AccessibilityNeedType =
   | 'motor_impairment'
   | 'autism_spectrum'
   | 'other_learning_disability'
+  | 'learning_disability'
 
 export type NeedPriority = 'primary' | 'secondary'
 

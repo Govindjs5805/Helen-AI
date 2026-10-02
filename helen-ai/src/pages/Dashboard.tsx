@@ -3,7 +3,9 @@ import { Navigate } from 'react-router-dom'
 import { Navbar } from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
 import { useAccessibilityProfile } from '@/hooks/useAccessibilityProfile'
+import { useTheme } from '@/context/ThemeContext'
 import { supabase } from '@/services/supabase'
+import { Link } from 'react-router-dom'
 import type { StudentProfile } from '@/types'
 
 /** Greeting header with time awareness */
@@ -45,11 +47,9 @@ function GreetingHeader({ name }: { name: string }) {
 function StreakProgressRing({
   streak,
   xpTotal,
-  isADHD,
 }: {
   streak: number
   xpTotal: number
-  isADHD: boolean
 }) {
   const radius = 80
   const circumference = 2 * Math.PI * radius
@@ -80,7 +80,6 @@ function StreakProgressRing({
             strokeDasharray={circumference}
             strokeDashoffset={strokeDashoffset}
             className="text-accent transition-all duration-1000 ease-out"
-            style={isADHD ? { animation: 'none' } : undefined}
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -95,8 +94,8 @@ function StreakProgressRing({
   )
 }
 
-/** Quick access cards to main modules — ADHD focus mode shows one at a time */
-function QuickAccessCards({ isADHDFocusMode }: { isADHDFocusMode: boolean }) {
+/** Quick access cards share one component tree; preset CSS controls focus mode. */
+function QuickAccessCards() {
   const modules = [
     { href: '/ai-assistant', label: 'AI Assistant', icon: '🤖' },
     { href: '/documents', label: 'Document Simplifier', icon: '📄' },
@@ -105,16 +104,13 @@ function QuickAccessCards({ isADHDFocusMode }: { isADHDFocusMode: boolean }) {
     { href: '/ai-assistant', label: 'Homework Helper', icon: '💡' },
   ]
 
-  // Filter to one module when in ADHD focus mode
-  const visibleModules = isADHDFocusMode ? modules.slice(0, 1) : modules
-
   return (
     <section className="mt-8">
       <h2 className="font-heading text-xl font-semibold text-text mb-4">
         Quick Access
       </h2>
-      <div className={isADHDFocusMode ? 'grid w-full max-w-sm' : 'grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5'}>
-        {visibleModules.map(module => (
+      <div className="dashboard-quick-access grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-5">
+        {modules.map(module => (
           <a
             key={module.href}
             href={module.href}
@@ -152,6 +148,134 @@ function ContinueSection() {
   )
 }
 
+function StudentIdCard({ studentId }: { studentId: string }) {
+  const [copyMessage, setCopyMessage] = useState('')
+
+  async function copyStudentId() {
+    try {
+      await navigator.clipboard.writeText(studentId)
+      setCopyMessage('Copied')
+    } catch {
+      setCopyMessage('Copy unavailable')
+    }
+  }
+
+  return (
+    <section className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 className="text-sm font-semibold text-text">Your Student ID</h2>
+        <p className="mt-1 font-mono text-lg font-semibold tracking-normal text-primary">
+          {studentId}
+        </p>
+        <p className="mt-1 text-sm text-text/70">Share this ID with your teacher.</p>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={copyStudentId}
+          className="min-h-11 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          Copy ID
+        </button>
+        <span aria-live="polite" className="min-w-24 text-sm text-text/70">
+          {copyMessage}
+        </span>
+      </div>
+    </section>
+  )
+}
+
+function TeacherDashboard({ name }: { name: string }) {
+  const { session } = useAuth()
+  const [classrooms, setClassrooms] = useState<Array<{
+    id: string
+    name: string
+    subject: string
+  }>>([])
+  const [loadingClassrooms, setLoadingClassrooms] = useState(true)
+  const [classroomError, setClassroomError] = useState('')
+
+  useEffect(() => {
+    if (!session?.user.id) return
+    let cancelled = false
+
+    supabase
+      .from('classrooms')
+      .select('id, name, subject')
+      .eq('teacher_id', session.user.id)
+      .order('created_at', { ascending: false })
+      .then(({ data, error }) => {
+        if (cancelled) return
+        if (error) setClassroomError('Classrooms could not be loaded.')
+        else setClassrooms(data ?? [])
+        setLoadingClassrooms(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [session?.user.id])
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-text">
+      <Navbar />
+      <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+        <header>
+          <h1 className="font-heading text-3xl font-bold text-text sm:text-4xl">
+            Welcome back, {name}
+          </h1>
+          <p className="mt-2 text-text/70">Your classrooms and student rosters.</p>
+        </header>
+
+        <section className="rounded-lg border border-primary/20 bg-surface p-5 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-text/70">Classrooms</p>
+              <p className="mt-1 text-3xl font-bold text-text">
+                {loadingClassrooms ? '…' : classrooms.length}
+              </p>
+            </div>
+            <Link
+              to="/classrooms"
+              className="inline-flex min-h-11 items-center justify-center rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              Manage classrooms
+            </Link>
+          </div>
+          {classroomError && <p role="alert" className="mt-3 text-sm text-red-600">{classroomError}</p>}
+        </section>
+
+        <section aria-labelledby="teacher-classrooms-heading">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 id="teacher-classrooms-heading" className="font-heading text-xl font-semibold text-text">
+              Your classrooms
+            </h2>
+            <Link to="/classrooms" className="text-sm font-medium text-primary underline underline-offset-4">
+              Create or manage
+            </Link>
+          </div>
+          {loadingClassrooms ? (
+            <p className="text-sm text-text/70">Loading classrooms…</p>
+          ) : classrooms.length === 0 ? (
+            <p className="rounded-lg border border-text/15 bg-surface p-5 text-text/70">
+              No classrooms yet. Create one to start building a roster.
+            </p>
+          ) : (
+            <ul className="divide-y divide-text/15 rounded-lg border border-text/15 bg-surface">
+              {classrooms.map(classroom => (
+                <li key={classroom.id} className="flex flex-wrap items-center justify-between gap-2 p-4">
+                  <span className="font-medium text-text">{classroom.name}</span>
+                  <span className="text-sm text-text/70">{classroom.subject}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      </main>
+    </div>
+  )
+}
+
 export function Dashboard() {
   const { session, profile, loading, logout } = useAuth()
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null)
@@ -159,11 +283,11 @@ export function Dashboard() {
     xpTotal: number
     currentStreak: number
   } | null>(null)
-  const { has, loading: profileLoading } = useAccessibilityProfile(
+  const { loading: profileLoading } = useAccessibilityProfile(
     session?.user.id
   )
-  const isADHD = has('adhd')
-  const isVisualImpairment = has('visual_impairment')
+  const { activeDisabilityPreset } = useTheme()
+  const isVisualImpairment = activeDisabilityPreset === 'visual_impairment'
 
   useEffect(() => {
     if (!session || !profile || profile.role !== 'student') return
@@ -208,10 +332,8 @@ export function Dashboard() {
   }
 
   // Non-student role placeholders
-  const rolePlaceholder: Record<string, string> = {
-    teacher: 'Teacher dashboard coming soon',
-    parent: 'Parent dashboard coming soon',
-    admin: 'Admin dashboard coming soon',
+  if (profile?.role === 'teacher') {
+    return <TeacherDashboard name={profile.full_name || session.user.email || 'there'} />
   }
 
   if (profile?.role !== 'student') {
@@ -224,7 +346,7 @@ export function Dashboard() {
           </h1>
           <div className="mt-8 rounded-2xl border border-black/10 bg-surface p-8 text-center dark:border-white/10">
             <p className="text-text/60">
-              {rolePlaceholder[profile?.role || ''] || 'Dashboard coming soon'}
+              {profile?.role === 'parent' ? 'Parent dashboard coming soon' : 'Admin dashboard coming soon'}
             </p>
           </div>
           <button
@@ -247,6 +369,8 @@ export function Dashboard() {
           name={profile?.full_name?.split(' ')[0] ?? session.user.email ?? 'there'}
         />
 
+        {profile.student_id && <StudentIdCard studentId={profile.student_id} />}
+
         {/* Accessibility role-based class: visual impairment bumps font */}
         {isVisualImpairment && (
           <div className="sr-only" aria-live="polite">
@@ -262,12 +386,11 @@ export function Dashboard() {
               <StreakProgressRing
                 streak={studentActivity?.currentStreak ?? 0}
                 xpTotal={studentActivity?.xpTotal ?? 0}
-                isADHD={isADHD}
               />
             </div>
 
             {/* Quick access cards — ADHD focus mode shows only one */}
-            <QuickAccessCards isADHDFocusMode={isADHD} />
+            <QuickAccessCards />
 
             {/* Continue where you left off */}
             <ContinueSection />

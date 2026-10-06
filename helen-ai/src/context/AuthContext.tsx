@@ -31,7 +31,7 @@ interface AuthContextType {
     role: UserRole,
     teacherDetails?: TeacherRegistrationDetails
   ) => Promise<{ error: string | null }>
-  logout: () => Promise<void>
+  logout: () => Promise<{ error: string | null }>
   refreshProfile: () => Promise<void>
 }
 
@@ -196,8 +196,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) return { error: error.message }
     setProfile(null)
+    return { error: null }
   }, [])
 
   return (

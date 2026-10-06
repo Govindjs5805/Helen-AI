@@ -1,6 +1,6 @@
-# Document Simplifier API
+# Helen AI API
 
-This FastAPI service verifies Supabase access tokens, reads the student's primary accessibility need on the server, extracts text from uploads, and stores documents in Supabase. The service-role key stays on the server; requests from the browser use the student's Supabase bearer token.
+This FastAPI service verifies Supabase access tokens, reads the student's primary accessibility need on the server, generates adapted quizzes, extracts text from uploads, and stores documents in Supabase. The service-role key stays on the server; requests from the browser use the student's Supabase bearer token.
 
 ## Local setup
 
@@ -30,6 +30,7 @@ Set `VITE_DOCUMENT_API_URL=http://127.0.0.1:8000` in the frontend `.env`. `FRONT
 
 - `POST /documents/upload` accepts multipart file or pasted-text fields and creates a processing document.
 - `POST /ai/simplify` accepts a `document_id` form field and applies the server-resolved primary accessibility preset.
+- `POST /ai/quiz` accepts JSON with `topic`, optional `source_text`, and optional `question_count` (3–10); it returns validated multiple-choice questions adapted to the student's primary accessibility need.
 - `GET /documents` and `GET /documents/{id}` return only the signed-in student's own documents.
 
 Image OCR requires the Tesseract executable. Scanned PDFs use PyMuPDF rendering followed by Tesseract. Native PDF text is extracted directly where available.

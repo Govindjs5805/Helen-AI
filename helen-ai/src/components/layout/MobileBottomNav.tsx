@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { LogoutButton } from '@/components/LogoutButton'
 
 const NAV_ITEMS = {
   student: [
@@ -217,6 +218,9 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
             </div>
           </div>
         )}
+        <div className="flex-1">
+          <LogoutButton compact />
+        </div>
       </div>
 
       {/* Safe-area bottom padding for iOS */}

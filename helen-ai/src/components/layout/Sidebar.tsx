@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LogoutButton } from '@/components/LogoutButton'
 
 // Local cn helper (no external utility dep needed)
 function cn(...classes: (string | boolean | undefined | null)[]): string {
@@ -265,6 +266,9 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </div>
           </div>
           <ThemeToggle className="w-full" />
+          <div className="mt-2">
+            <LogoutButton />
+          </div>
         </div>
       </div>
     </aside>

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import os
+import logging
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Literal
@@ -8,11 +10,12 @@ from uuid import UUID
 
 import httpx
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.concurrency import run_in_threadpool
 
 load_dotenv(Path(__file__).resolve().parent / '.env')
+logger = logging.getLogger(__name__)
 
 
 MAX_UPLOAD_BYTES = 15 * 1024 * 1024
@@ -79,6 +82,30 @@ def service_headers() -> dict[str, str]:
     }
 
 
+async def request_supabase(
+    client: httpx.AsyncClient,
+    method: str,
+    url: str,
+    *,
+    retry_connection: bool = True,
+    **kwargs: Any,
+) -> httpx.Response:
+    attempts = 3 if retry_connection else 1
+    for attempt in range(attempts):
+        try:
+            return await client.request(method, url, **kwargs)
+        except (httpx.ConnectError, httpx.ConnectTimeout) as error:
+            if attempt + 1 == attempts:
+                logger.warning('Supabase connection failed after %s attempt(s).', attempts)
+                raise HTTPException(
+                    status_code=503,
+                    detail='Cannot reach Supabase right now. Check your internet connection and retry.',
+                ) from error
+            logger.warning('Supabase connection failed; retrying request %s of %s.', attempt + 1, attempts - 1)
+            await asyncio.sleep(0.5 * (attempt + 1))
+    raise HTTPException(status_code=503, detail='Cannot reach Supabase right now. Retry shortly.')
+
+
 async def rest_request(
     method: str,
     table_or_path: str,
@@ -92,7 +119,15 @@ async def rest_request(
     if method in {'POST', 'PATCH'}:
         headers['Prefer'] = 'return=representation'
     async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.request(method, url, params=params, json=payload, headers=headers)
+        response = await request_supabase(
+            client,
+            method,
+            url,
+            retry_connection=method != 'POST',
+            params=params,
+            json=payload,
+            headers=headers,
+        )
     if response.is_error:
         raise HTTPException(status_code=502, detail='We could not save or load your document. Try again.')
     if not response.content:
@@ -108,7 +143,9 @@ async def current_student(authorization: str | None = Header(default=None)) -> d
     supabase_url = required_env('SUPABASE_URL').rstrip('/')
     anon_key = required_env('SUPABASE_ANON_KEY')
     async with httpx.AsyncClient(timeout=15) as client:
-        response = await client.get(
+        response = await request_supabase(
+            client,
+            'GET',
             f'{supabase_url}/auth/v1/user',
             headers={'apikey': anon_key, 'Authorization': f'Bearer {access_token}'},
         )
@@ -217,8 +254,22 @@ async def health() -> dict[str, str]:
 
 
 @app.get('/documents')
-async def list_documents(student: dict[str, str] = Depends(current_student)) -> list[dict[str, Any]]:
-    return await rest_request(
+async def list_documents(
+    restore: bool = Query(default=False),
+    selected_id: UUID | None = Query(default=None),
+    student: dict[str, str] = Depends(current_student),
+) -> dict[str, Any]:
+    async def get_selected() -> dict[str, Any] | None:
+        if not selected_id:
+            return None
+        try:
+            return await owned_document(selected_id, student['student_id'])
+        except HTTPException as error:
+            if error.status_code == 404:
+                return None
+            raise
+
+    history_query = rest_request(
         'GET', 'documents',
         params={
             'student_id': f"eq.{student['student_id']}",
@@ -226,7 +277,14 @@ async def list_documents(student: dict[str, str] = Depends(current_student)) -> 
             'order': 'created_at.desc',
             'limit': '100',
         },
-    ) or []
+    )
+    documents, selected_document = await asyncio.gather(history_query, get_selected())
+    documents = documents or []
+
+    if restore and selected_document is None and documents:
+        selected_document = await owned_document(UUID(documents[0]['id']), student['student_id'])
+
+    return {'documents': documents, 'selected_document': selected_document}
 
 
 @app.get('/documents/{document_id}')
@@ -320,25 +378,85 @@ async def upload_document(
 
 async def simplify_with_gemini(text: str, preset: str) -> str:
     api_key = required_env('GEMINI_API_KEY')
-    model = os.getenv('GEMINI_MODEL', 'gemini-2.0-flash').strip()
+    model = os.getenv('GEMINI_MODEL', 'gemini-3.5-flash-lite').strip()
     prompt = (
         f'{PRESET_PROMPTS[preset]}\n\n'
         'Return only the rewritten document. Do not mention accessibility settings or add a preamble.\n\n'
         f'SOURCE DOCUMENT:\n{text}'
     )
     async with httpx.AsyncClient(timeout=90) as client:
-        response = await client.post(
-            f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
-            params={'key': api_key},
-            json={
-                'contents': [{'parts': [{'text': prompt}]}],
-                'generationConfig': {'temperature': 0.2},
-            },
-        )
+        for attempt in range(3):
+            try:
+                response = await client.post(
+                    f'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
+                    params={'key': api_key},
+                    json={
+                        'contents': [{'parts': [{'text': prompt}]}],
+                        'generationConfig': {'temperature': 0.2},
+                    },
+                )
+            except (httpx.ConnectError, httpx.ConnectTimeout) as error:
+                if attempt < 2:
+                    logger.warning(
+                        'Could not connect to Google AI (attempt %s of 3); retrying.',
+                        attempt + 1,
+                    )
+                    await asyncio.sleep(0.75 * (2 ** attempt))
+                    continue
+                logger.warning('Could not connect to Google AI after 3 attempts.')
+                raise HTTPException(
+                    status_code=503,
+                    detail='Cannot reach Google AI right now. Your document is saved; please retry shortly.',
+                ) from error
+            except httpx.TimeoutException as error:
+                logger.warning('Google AI did not respond before the request timed out.')
+                raise HTTPException(
+                    status_code=503,
+                    detail='Google AI took too long to respond. Your document is saved; please retry shortly.',
+                ) from error
+            if response.status_code not in {500, 502, 503, 504} or attempt == 2:
+                break
+            logger.warning(
+                'Gemini is temporarily unavailable (HTTP %s); retrying request %s of 2.',
+                response.status_code,
+                attempt + 1,
+            )
+            await asyncio.sleep(0.75 * (2 ** attempt))
 
     if response.status_code == 429:
+        logger.warning('Gemini request was rate limited (429).')
         raise HTTPException(status_code=503, detail='The simplifier is busy right now. Please try again shortly.')
     if response.is_error:
+        try:
+            provider_error = response.json().get('error', {})
+            provider_status = str(provider_error.get('status', 'unknown'))
+        except (ValueError, AttributeError):
+            provider_status = 'unknown'
+        logger.warning(
+            'Gemini request failed with HTTP %s, provider status %s.',
+            response.status_code,
+            provider_status,
+        )
+        if response.status_code in {401, 403}:
+            raise HTTPException(
+                status_code=502,
+                detail='Gemini rejected its API key. Check GEMINI_API_KEY in backend/.env.',
+            )
+        if response.status_code == 404:
+            raise HTTPException(
+                status_code=502,
+                detail='The configured Gemini model is unavailable. Set GEMINI_MODEL to gemini-3.5-flash-lite.',
+            )
+        if response.status_code == 400:
+            raise HTTPException(
+                status_code=502,
+                detail='Gemini rejected the request. Check the configured model and try again.',
+            )
+        if response.status_code in {500, 502, 503, 504}:
+            raise HTTPException(
+                status_code=503,
+                detail='Google AI is temporarily unavailable. Your document is saved; please retry simplification shortly.',
+            )
         raise HTTPException(status_code=502, detail='The simplifier is temporarily unavailable. Please retry.')
     payload = response.json()
     candidates = payload.get('candidates') or []
@@ -355,6 +473,13 @@ async def simplify_document(
     student: dict[str, str] = Depends(current_student),
 ) -> dict[str, Any]:
     document = await owned_document(document_id, student['student_id'])
+    if document.get('status') == 'done' and document.get('simplified_text'):
+        return {
+            'id': str(document_id),
+            'status': 'done',
+            'preset': 'saved-result',
+            'simplified_text': document['simplified_text'],
+        }
     if not document.get('original_text', '').strip():
         raise HTTPException(status_code=422, detail='This document has no readable text. Upload it again or paste the text.')
 

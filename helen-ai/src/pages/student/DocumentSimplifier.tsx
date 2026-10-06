@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type DragEvent, type FormEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
+const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
 
 type DocumentStatus = 'processing' | 'done' | 'failed'
 type SourceType = 'pdf' | 'image' | 'text'
@@ -17,6 +17,11 @@ interface DocumentRecord {
   simplified_text?: string | null
   error_message?: string | null
   created_at: string
+}
+
+interface DocumentHistoryResponse {
+  documents: DocumentRecord[]
+  selected_document: DocumentRecord | null
 }
 
 interface ApiErrorBody {
@@ -159,6 +164,9 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
   const { activeDisabilityPreset } = useTheme()
   const preset = activeDisabilityPreset ?? 'learning_disability'
   const speech = useTextToSpeech()
+  const lastDocumentKey = session?.user.id
+    ? `helen-ai:last-document:${session.user.id}`
+    : null
 
   const [history, setHistory] = useState<DocumentRecord[]>(() => preview ? [previewDocument(preset)] : [])
   const [currentDocument, setCurrentDocument] = useState<DocumentRecord | null>(() => preview ? previewDocument(preset) : null)
@@ -175,6 +183,7 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
   const [retryDocumentId, setRetryDocumentId] = useState('')
   const [readAlong, setReadAlong] = useState(false)
   const [openSection, setOpenSection] = useState(0)
+  const documentPollToken = useRef(0)
 
   const simplifiedText = currentDocument?.simplified_text ?? ''
   const sentences = useMemo(() => splitSentences(simplifiedText), [simplifiedText])
@@ -194,26 +203,72 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
     setHistory([sample])
   }, [preview, preset])
 
-  async function loadHistory() {
+  async function loadHistory(
+    selectedId?: string,
+    restore = false
+  ): Promise<DocumentHistoryResponse> {
     if (preview || !session?.access_token) {
       setHistoryLoading(false)
-      return
+      return { documents: [], selected_document: null }
     }
     setHistoryLoading(true)
     setHistoryError('')
     try {
-      const documents = await request<DocumentRecord[]>('/documents', session.access_token)
-      setHistory(documents)
+      const query = new URLSearchParams()
+      if (selectedId) query.set('selected_id', selectedId)
+      if (restore) query.set('restore', 'true')
+      const suffix = query.size ? `?${query.toString()}` : ''
+      const result = await request<DocumentHistoryResponse>(`/documents${suffix}`, session.access_token)
+      setHistory(result.documents)
+      return result
     } catch (caught) {
       setHistoryError(caught instanceof Error ? caught.message : 'Document history could not be loaded.')
+      return { documents: [], selected_document: null }
     } finally {
       setHistoryLoading(false)
     }
   }
 
   useEffect(() => {
-    void loadHistory()
+    let cancelled = false
+
+    const restoreDocument = async () => {
+      const previousId = lastDocumentKey
+        ? localStorage.getItem(lastDocumentKey)
+        : null
+      const result = await loadHistory(previousId ?? undefined, true)
+      if (cancelled || preview) return
+
+      const restored = result.selected_document
+      if (!restored) return
+      if (lastDocumentKey) localStorage.setItem(lastDocumentKey, restored.id)
+      setCurrentDocument(restored)
+      setOpenSection(0)
+      setRetryDocumentId('')
+      if (restored.status === 'failed') {
+        setError(restored.error_message || 'This document needs another try.')
+        setRetryDocumentId(restored.original_text?.trim() ? restored.id : '')
+      } else if (restored.status === 'processing' && restored.original_text?.trim()) {
+        const pollToken = ++documentPollToken.current
+        void watchDocument(restored.id, pollToken)
+      }
+    }
+
+    void restoreDocument()
+    return () => {
+      cancelled = true
+    }
   }, [session?.access_token])
+
+  useEffect(() => {
+    if (!lastDocumentKey || !currentDocument) return
+    localStorage.setItem(lastDocumentKey, currentDocument.id)
+  }, [lastDocumentKey, currentDocument?.id])
+
+  useEffect(() => () => {
+    documentPollToken.current += 1
+    speech.stop()
+  }, [speech.stop])
 
   async function openDocument(documentId: string) {
     if (preview) {
@@ -222,6 +277,8 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
       return
     }
     if (!session?.access_token) return
+    if (lastDocumentKey) localStorage.setItem(lastDocumentKey, documentId)
+    const pollToken = ++documentPollToken.current
     setError('')
     setRetryDocumentId('')
     speech.stop()
@@ -234,15 +291,61 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
         setError(document.error_message || 'This document needs another try.')
         setRetryDocumentId(document.id)
       } else if (document.status === 'processing' && document.original_text?.trim()) {
-        void simplify(document.id)
+        void watchDocument(document.id, pollToken)
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'That document could not be opened.')
     }
   }
 
+  async function watchDocument(documentId: string, pollToken: number) {
+    if (!session?.access_token) return
+    setBusy(true)
+    setError('')
+    setProgressMessage('Checking whether simplification is complete…')
+
+    try {
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        if (pollToken !== documentPollToken.current) return
+
+        const document = await request<DocumentRecord>(`/documents/${documentId}`, session.access_token)
+        setCurrentDocument(document)
+        setHistory(previous => previous.map(item => item.id === document.id
+          ? { ...item, status: document.status, error_message: document.error_message }
+          : item))
+
+        if (document.status === 'done' || document.status === 'failed') {
+          if (document.status === 'failed') {
+            setError(document.error_message || 'This document needs another try.')
+            setRetryDocumentId(document.original_text?.trim() ? document.id : '')
+          } else {
+            setError('')
+            setRetryDocumentId('')
+          }
+          await loadHistory()
+          return
+        }
+      }
+
+      if (pollToken === documentPollToken.current) {
+        setError('This document is still processing. Refresh its status shortly; it will not be submitted again.')
+      }
+    } catch (caught) {
+      if (pollToken === documentPollToken.current) {
+        setError(caught instanceof Error ? caught.message : 'Could not check document status. Refresh and try again.')
+      }
+    } finally {
+      if (pollToken === documentPollToken.current) {
+        setBusy(false)
+        setProgressMessage('')
+      }
+    }
+  }
+
   async function simplify(documentId: string) {
     if (!session?.access_token) return
+    documentPollToken.current += 1
     setBusy(true)
     setError('')
     setRetryDocumentId('')
@@ -286,6 +389,7 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
       return
     }
 
+    documentPollToken.current += 1
     setBusy(true)
     setError('')
     setProgressMessage(pasteMode ? 'Saving your text…' : 'Uploading and reading your document…')

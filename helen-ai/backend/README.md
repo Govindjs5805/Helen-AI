@@ -12,11 +12,11 @@ This FastAPI service verifies Supabase access tokens, reads the student's primar
    pip install -r requirements.txt
    ```
 
-2. Copy `.env.example` to `.env` and set the Supabase URL, anon key, service-role key, and Gemini API key. Never put the service-role key or Gemini key in the Vite environment.
+2. Copy `.env.example` to `.env` and set the Supabase URL, anon key, service-role key, and Gemini API key. The default `GEMINI_MODEL` is `gemini-3.5-flash-lite`. Never put the service-role key or Gemini key in the Vite environment.
 
 3. Install the Tesseract OCR executable separately. Set `TESSERACT_CMD` to its full path on Windows if it is not available on `PATH`.
 
-4. Apply the Supabase migrations, including `0006_documents.sql`.
+4. Apply the Supabase migrations, including `0006_documents.sql` and `0007_teacher_profiles.sql`.
 
 5. Start the API from this directory:
 

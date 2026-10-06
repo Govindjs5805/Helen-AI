@@ -9,6 +9,12 @@ import {
 import { supabase } from '@/services/supabase'
 import type { Profile, UserRole } from '@/types'
 
+export interface TeacherRegistrationDetails {
+  instituteName: string
+  place: string
+  designation?: string
+}
+
 // ---------------------------------------------------------------------------
 // Context shape
 // ---------------------------------------------------------------------------
@@ -22,7 +28,8 @@ interface AuthContextType {
     email: string,
     password: string,
     fullName: string,
-    role: UserRole
+    role: UserRole,
+    teacherDetails?: TeacherRegistrationDetails
   ) => Promise<{ error: string | null }>
   logout: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -139,7 +146,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const register = useCallback(
-    async (email: string, password: string, fullName: string, role: UserRole) => {
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+      role: UserRole,
+      teacherDetails?: TeacherRegistrationDetails,
+    ) => {
       const { error: signUpError, data } =
         await supabase.auth.signUp({
           email,
@@ -148,6 +161,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             data: {
               full_name: fullName,
               role,
+              ...(role === 'teacher' && teacherDetails
+                ? {
+                    institute_name: teacherDetails.instituteName,
+                    place: teacherDetails.place,
+                    designation: teacherDetails.designation ?? '',
+                  }
+                : {}),
             },
           },
         })

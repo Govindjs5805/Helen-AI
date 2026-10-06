@@ -196,11 +196,15 @@ export function Auth() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<UserRole>('student')
+  const [instituteName, setInstituteName] = useState('')
+  const [place, setPlace] = useState('')
+  const [designation, setDesignation] = useState('')
 
   // Validation errors
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [fullNameError, setFullNameError] = useState<string | null>(null)
+  const [teacherDetailsError, setTeacherDetailsError] = useState<string | null>(null)
 
   // Submission state
   const [buttonState, setButtonState] = useState<ButtonState>('idle')
@@ -220,11 +224,19 @@ export function Auth() {
     const e = validateEmail(email)
     const p = validatePassword(password)
     const n = mode === 'register' ? validateName(fullName) : null
+    const teacherError = mode === 'register' && role === 'teacher'
+      ? !instituteName.trim()
+        ? 'Institute name is required'
+        : !place.trim()
+          ? 'Place is required'
+          : null
+      : null
 
     setEmailError(e)
     setPasswordError(p)
     setFullNameError(n)
-    return !e && !p && !n
+    setTeacherDetailsError(teacherError)
+    return !e && !p && !n && !teacherError
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -254,7 +266,9 @@ export function Auth() {
         return
       }
     } else {
-      const { error } = await register(email, password, fullName, role)
+      const { error } = await register(email, password, fullName, role, role === 'teacher'
+        ? { instituteName: instituteName.trim(), place: place.trim(), designation: designation.trim() }
+        : undefined)
       if (error) {
         setButtonState('error')
         const msg =
@@ -279,6 +293,7 @@ export function Auth() {
     setEmailError(null)
     setPasswordError(null)
     setFullNameError(null)
+    setTeacherDetailsError(null)
     setSubmitError(null)
     setButtonState('idle')
   }
@@ -433,6 +448,50 @@ export function Auth() {
                       </legend>
                       <RoleSelector value={role} onChange={setRole} />
                     </fieldset>
+                  </motion.div>
+                )}
+
+                {mode === 'register' && role === 'teacher' && (
+                  <motion.div
+                    key="teacher-details"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-5 overflow-hidden"
+                  >
+                    <FormInput
+                      id="teacher-institute"
+                      label="Institute name"
+                      value={instituteName}
+                      onChange={value => {
+                        setInstituteName(value)
+                        if (teacherDetailsError) setTeacherDetailsError(value.trim() ? null : 'Institute name is required')
+                      }}
+                      error={teacherDetailsError && !instituteName.trim() ? teacherDetailsError : null}
+                      placeholder="Your school or institution"
+                      autoComplete="organization"
+                    />
+                    <FormInput
+                      id="teacher-place"
+                      label="Place"
+                      value={place}
+                      onChange={value => {
+                        setPlace(value)
+                        if (teacherDetailsError && instituteName.trim()) setTeacherDetailsError(value.trim() ? null : 'Place is required')
+                      }}
+                      error={teacherDetailsError && instituteName.trim() ? teacherDetailsError : null}
+                      placeholder="City or location"
+                      autoComplete="address-level2"
+                    />
+                    <FormInput
+                      id="teacher-designation"
+                      label="Designation (optional)"
+                      value={designation}
+                      onChange={setDesignation}
+                      placeholder="e.g. Assistant Professor"
+                      autoComplete="organization-title"
+                    />
                   </motion.div>
                 )}
 

@@ -4,6 +4,9 @@ import { OnboardingGuard } from '@/components/OnboardingGuard'
 import { Auth } from '@/pages/Auth'
 import { Onboarding } from '@/pages/Onboarding'
 import { Dashboard } from '@/pages/Dashboard'
+import { Dashboard as TeacherDashboard } from '@/pages/teacher/Dashboard'
+import { ClassroomDetail } from '@/pages/teacher/ClassroomDetail'
+import { StudentProgress as TeacherStudentProgress } from '@/pages/teacher/StudentProgress'
 import { AppShell } from '@/components/layout/AppShell'
 import { AIAssistant } from '@/pages/AIAssistant'
 import { Documents } from '@/pages/Documents'
@@ -31,6 +34,7 @@ function RootRedirect() {
 }
 
 export default function App() {
+  const { profile } = useAuth()
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
@@ -43,7 +47,7 @@ export default function App() {
         element={
           <OnboardingGuard>
             <AppShell>
-              <Dashboard />
+              {profile?.role === 'teacher' ? <TeacherDashboard /> : <Dashboard />}
             </AppShell>
           </OnboardingGuard>
         }
@@ -89,11 +93,21 @@ export default function App() {
         }
       />
       <Route
+        path="/classrooms/:classroomId"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <ClassroomDetail />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
         path="/classrooms"
         element={
           <OnboardingGuard>
             <AppShell>
-              <Classrooms />
+              {profile?.role === 'teacher' ? <TeacherDashboard /> : <Classrooms />}
             </AppShell>
           </OnboardingGuard>
         }
@@ -113,7 +127,7 @@ export default function App() {
         element={
           <OnboardingGuard>
             <AppShell>
-              <StudentProgress />
+              {profile?.role === 'teacher' ? <TeacherStudentProgress /> : <StudentProgress />}
             </AppShell>
           </OnboardingGuard>
         }

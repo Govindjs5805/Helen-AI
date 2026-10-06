@@ -6,7 +6,7 @@ import os
 import logging
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TypedDict
 from uuid import UUID
 
 import httpx
@@ -102,6 +102,11 @@ class QuizQuestion(BaseModel):
     explanation: str = Field(min_length=1, max_length=1000)
 
 
+class StudentIdentity(TypedDict):
+    user_id: str
+    student_id: str | None
+
+
 def parse_quiz_questions(response_text: str, question_count: int) -> list[QuizQuestion]:
     parsed = json.loads(response_text)
     raw_questions = parsed.get('questions')
@@ -195,7 +200,7 @@ async def rest_request(
     return response.json()
 
 
-async def current_student(authorization: str | None = Header(default=None)) -> dict[str, str]:
+async def authenticated_student(authorization: str | None = Header(default=None)) -> StudentIdentity:
     if not authorization or not authorization.lower().startswith('bearer '):
         raise HTTPException(status_code=401, detail='Please sign in again to continue.')
 
@@ -220,9 +225,21 @@ async def current_student(authorization: str | None = Header(default=None)) -> d
         'GET', 'profiles',
         params={'id': f'eq.{user_id}', 'select': 'id,student_id,role', 'limit': '1'},
     )
-    if not profiles or profiles[0].get('role') != 'student' or not profiles[0].get('student_id'):
-        raise HTTPException(status_code=403, detail='Document simplification is available to student accounts.')
-    return {'user_id': user_id, 'student_id': profiles[0]['student_id']}
+    if not profiles or profiles[0].get('role') != 'student':
+        raise HTTPException(status_code=403, detail='This feature is available to student accounts.')
+    return {'user_id': user_id, 'student_id': profiles[0].get('student_id')}
+
+
+async def current_student(
+    student: StudentIdentity = Depends(authenticated_student),
+) -> dict[str, str]:
+    student_id = student.get('student_id')
+    if not student_id:
+        raise HTTPException(
+            status_code=403,
+            detail='Document simplification requires a student ID. Complete student setup and try again.',
+        )
+    return {'user_id': student['user_id'], 'student_id': student_id}
 
 
 async def owned_document(document_id: UUID, student_id: str) -> dict[str, Any]:
@@ -615,7 +632,7 @@ async def generate_quiz_with_gemini(
 @app.post('/ai/quiz')
 async def generate_quiz(
     quiz_request: QuizRequest,
-    student: dict[str, str] = Depends(current_student),
+    student: StudentIdentity = Depends(authenticated_student),
 ) -> dict[str, Any]:
     topic = quiz_request.topic.strip()
     source_text = quiz_request.source_text.strip()

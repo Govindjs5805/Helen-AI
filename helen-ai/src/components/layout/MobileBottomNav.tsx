@@ -8,6 +8,8 @@ const NAV_ITEMS = {
     { href: '/ai-assistant', label: 'AI', icon: AssistantIcon },
     { href: '/documents', label: 'Docs', icon: DocumentsIcon },
     { href: '/notes', label: 'Notes', icon: NotesIcon },
+    { href: '/planner', label: 'Plan', icon: NotesIcon },
+    { href: '/focus', label: 'Focus', icon: ProgressIcon },
     { href: '/progress', label: 'More', icon: ProgressIcon },
   ],
   teacher: [

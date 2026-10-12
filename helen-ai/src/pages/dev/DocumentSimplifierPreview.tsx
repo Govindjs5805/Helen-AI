@@ -15,7 +15,7 @@ export function DocumentSimplifierPreview() {
   const { theme, toggleTheme, activeDisabilityPreset, setActiveDisabilityPreset } = useTheme()
 
   return (
-    <div className="min-h-screen bg-background px-4 py-5 text-text sm:px-6 sm:py-8">
+    <main className="min-h-screen bg-background px-4 py-5 text-text sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6 flex flex-col gap-4 border-b border-text/20 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -49,6 +49,6 @@ export function DocumentSimplifierPreview() {
 
         <DocumentSimplifier preview />
       </div>
-    </div>
+    </main>
   )
 }

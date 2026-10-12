@@ -19,6 +19,10 @@ import { Users } from '@/pages/Users'
 import { Reports } from '@/pages/Reports'
 import { ThemePreview } from '@/pages/dev/ThemePreview'
 import { DocumentSimplifierPreview } from '@/pages/dev/DocumentSimplifierPreview'
+import { ReadingSettings } from '@/pages/ReadingSettings'
+import { HomeworkHelp } from '@/pages/HomeworkHelp'
+import { FocusMode } from '@/pages/FocusMode'
+import { Planner } from '@/pages/Planner'
 
 function RootRedirect() {
   const { session, profile, loading } = useAuth()
@@ -73,6 +77,36 @@ export default function App() {
         }
       />
       <Route
+        path="/homework"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <HomeworkHelp />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/focus"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <FocusMode />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/planner"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Planner />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
         path="/notes"
         element={
           <OnboardingGuard>
@@ -88,6 +122,16 @@ export default function App() {
           <OnboardingGuard>
             <AppShell>
               <Progress />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/settings/reading"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <ReadingSettings />
             </AppShell>
           </OnboardingGuard>
         }

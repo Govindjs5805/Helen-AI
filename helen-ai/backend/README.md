@@ -1,6 +1,6 @@
 # Helen AI API
 
-This FastAPI service verifies Supabase access tokens, reads the student's primary accessibility need on the server, generates adapted quizzes, extracts text from uploads, and stores documents in Supabase. The service-role key stays on the server; requests from the browser use the student's Supabase bearer token.
+This FastAPI service verifies Supabase access tokens, reads student accessibility and reading profiles on the server, generates adapted quizzes and tutor replies, extracts text from uploads, and stores private student documents in Supabase. The service-role key stays on the server; requests from the browser use the student's Supabase bearer token.
 
 ## Local setup
 
@@ -16,7 +16,7 @@ This FastAPI service verifies Supabase access tokens, reads the student's primar
 
 3. Install the Tesseract OCR executable separately. Set `TESSERACT_CMD` to its full path on Windows if it is not available on `PATH`.
 
-4. Apply the Supabase migrations, including `0006_documents.sql` and `0007_teacher_profiles.sql`.
+4. Apply the Supabase migrations in order through `0013_atomic_attention_invite_redemption.sql`. The migrations add private reading and attention preferences, document OCR/readability metadata, student-owned notes, owner-scoped focus sessions/tasks/planner items, and explicit, revocable sharing grants.
 
 5. Start the API from this directory:
 
@@ -29,8 +29,21 @@ Set `VITE_DOCUMENT_API_URL=http://127.0.0.1:8000` in the frontend `.env`. `FRONT
 ## Routes
 
 - `POST /documents/upload` accepts multipart file or pasted-text fields and creates a processing document.
-- `POST /ai/simplify` accepts a `document_id` form field and applies the server-resolved primary accessibility preset.
+- `PATCH /documents/{id}/text` saves corrected OCR text for the signed-in student's own document.
+- `POST /ai/simplify` accepts a `document_id`, optional reading level, preserved terms, sentence-length target, and output type. It returns Flesch–Kincaid grade estimates and a low-confidence flag.
+- `POST /ai/simplify-text` accepts JSON with `text`, `reading_level`, `preserve_terms`, `max_sentence_length`, and `output_type`; it stores the source and result as a private document.
 - `POST /ai/quiz` accepts JSON with `topic`, optional `source_text`, and optional `question_count` (3–10); it returns validated multiple-choice questions adapted to the student's primary accessibility need.
+- `POST /ai/tutor` accepts a question, optional conversation history, reading level, and a follow-up action.
 - `GET /documents` and `GET /documents/{id}` return only the signed-in student's own documents.
+- `/attention/focus-sessions` creates, lists, and updates the signed-in student's focus sessions; `POST /attention/focus-sessions/{id}/events` records breaks, interruptions, and stuck moments.
+- `/attention/tasks` lists private checklists; `POST /attention/tasks/breakdown` generates and validates ordered task steps before saving.
+- `/attention/parked-thoughts` privately saves and reviews quick-captured thoughts.
+- `/attention/planner` creates and updates the student's daily planner items.
+- `/attention/shares/invites` creates a 24-hour, email-bound, one-use parent/teacher invite with student-selected scopes. `/attention/shares/redeem` verifies the account and, for teachers, the active classroom roster. Parents and teachers receive only aggregate summaries covered by the active grant; students can revoke grants or pending invites.
+- `/attention/admin/metrics` returns aggregate row counts only.
 
-Image OCR requires the Tesseract executable. Scanned PDFs use PyMuPDF rendering followed by Tesseract. Native PDF text is extracted directly where available.
+Sharing tokens are stored as SHA-256 hashes. Sharing tables have RLS enabled without direct client write policies; changes are performed only through the authenticated API after ownership, role, expiry, email, and roster checks. Invite redemption and grant creation are atomic in the `0013` RPC migration.
+
+Image OCR requires the Tesseract executable. Scanned PDFs use PyMuPDF rendering followed by Tesseract. Native PDF text is extracted directly where available. OCR confidence is an average of Tesseract word confidence values; it is not available for native text extraction.
+
+Run backend tests with `.\.venv\Scripts\python.exe -m unittest discover -v -p 'test*.py'`.

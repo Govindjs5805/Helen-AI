@@ -2,11 +2,14 @@ import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } 
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
+import { useReadingTheme } from '@/context/ReadingThemeContext'
+import { useNavigate } from 'react-router-dom'
 
 const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
 
 type DocumentStatus = 'processing' | 'done' | 'failed'
 type SourceType = 'pdf' | 'image' | 'text'
+type SimplificationOutput = 'simplified_text' | 'bullet_summary' | 'glossary' | 'step_outline' | 'audio_script' | 'scan_fast'
 
 interface DocumentRecord {
   id: string
@@ -15,6 +18,14 @@ interface DocumentRecord {
   status: DocumentStatus
   original_text?: string
   simplified_text?: string | null
+  simplification_metadata?: {
+    original_flesch_kincaid_grade?: number | null
+    simplified_flesch_kincaid_grade?: number | null
+    reading_level?: string
+    output_type?: string
+    low_confidence?: boolean
+  } | null
+  ocr_confidence?: number | null
   error_message?: string | null
   created_at: string
 }
@@ -159,11 +170,22 @@ function previewDocument(preset: string): DocumentRecord {
   }
 }
 
-export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
+export function DocumentSimplifier({ preview = false, initialOutputType = 'simplified_text' }: {
+  preview?: boolean
+  initialOutputType?: SimplificationOutput
+}) {
+  const navigate = useNavigate()
   const { session } = useAuth()
   const { activeDisabilityPreset } = useTheme()
-  const preset = activeDisabilityPreset ?? 'learning_disability'
-  const speech = useTextToSpeech()
+  const {
+    preferences, savePreferences, setPreferences, dyslexiaEnabled, adhdEnabled, attentionPreferences,
+  } = useReadingTheme()
+  const preset = dyslexiaEnabled ? 'dyslexia' : adhdEnabled ? 'adhd' : activeDisabilityPreset ?? 'learning_disability'
+  const speech = useTextToSpeech({
+    rate: preferences.tts.rate,
+    voice: preferences.tts.voice,
+    pauseSeconds: preferences.tts.pause_seconds,
+  })
   const lastDocumentKey = session?.user.id
     ? `helen-ai:last-document:${session.user.id}`
     : null
@@ -176,18 +198,46 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
   const [pasteMode, setPasteMode] = useState(false)
   const [pastedText, setPastedText] = useState('')
   const [title, setTitle] = useState('')
+  const [outputType, setOutputType] = useState<SimplificationOutput>(initialOutputType)
+  const [preserveTerms, setPreserveTerms] = useState('')
+  const [maxSentenceLength, setMaxSentenceLength] = useState(18)
   const [isDragging, setIsDragging] = useState(false)
   const [busy, setBusy] = useState(false)
   const [progressMessage, setProgressMessage] = useState('')
   const [error, setError] = useState('')
   const [retryDocumentId, setRetryDocumentId] = useState('')
   const [readAlong, setReadAlong] = useState(false)
+  const [showOriginal, setShowOriginal] = useState(false)
+  const [editingOriginal, setEditingOriginal] = useState(false)
+  const [correctedOriginal, setCorrectedOriginal] = useState('')
+  const [speechMode, setSpeechMode] = useState<'sentence' | 'paragraph'>('sentence')
+  const [rulerEnabled, setRulerEnabled] = useState(preferences.reading_aid === 'ruler')
+  const [rulerTop, setRulerTop] = useState(0)
   const [openSection, setOpenSection] = useState(0)
   const documentPollToken = useRef(0)
 
   const simplifiedText = currentDocument?.simplified_text ?? ''
   const sentences = useMemo(() => splitSentences(simplifiedText), [simplifiedText])
+  const speechChunks = useMemo(
+    () => speechMode === 'paragraph'
+      ? simplifiedText.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean)
+      : sentences,
+    [sentences, simplifiedText, speechMode]
+  )
   const sections = useMemo(() => splitSections(simplifiedText), [simplifiedText])
+  const readerSections = useMemo(() => {
+    if (!adhdEnabled || attentionPreferences.chunk_size === 'short_section') return sections
+    const paragraphs = simplifiedText.split(/\n\s*\n/).map(part => part.trim()).filter(Boolean)
+    if (paragraphs.length > 1) return paragraphs.map((content, index) => ({ title: `Part ${index + 1}`, content }))
+    const sentenceParts = splitSentences(simplifiedText)
+    if (sentenceParts.length <= 3) return sections
+    const chunks: TextSection[] = []
+    for (let index = 0; index < sentenceParts.length; index += 3) {
+      chunks.push({ title: `Part ${chunks.length + 1}`, content: sentenceParts.slice(index, index + 3).join(' ') })
+    }
+    return chunks
+  }, [adhdEnabled, attentionPreferences.chunk_size, sections, simplifiedText])
+  const chunkedReader = (dyslexiaEnabled && preferences.density === 'chunked') || adhdEnabled
   const presetLabels: Record<string, string> = {
     dyslexia: 'Dyslexia',
     adhd: 'ADHD',
@@ -264,6 +314,18 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
     if (!lastDocumentKey || !currentDocument) return
     localStorage.setItem(lastDocumentKey, currentDocument.id)
   }, [lastDocumentKey, currentDocument?.id])
+
+  useEffect(() => {
+    setRulerEnabled(preferences.reading_aid === 'ruler' || preferences.reading_aid === 'focus-mask')
+  }, [preferences.reading_aid])
+
+  useEffect(() => {
+    if (preview || !session?.user.id || !currentDocument?.id) return
+    const key = `helen-ai:last-reading-part:${session.user.id}:${currentDocument.id}`
+    const saved = Number(localStorage.getItem(key))
+    if (Number.isInteger(saved) && saved >= 0 && saved < readerSections.length) setOpenSection(saved)
+    else setOpenSection(0)
+  }, [preview, session?.user.id, currentDocument?.id, readerSections.length])
 
   useEffect(() => () => {
     documentPollToken.current += 1
@@ -352,13 +414,38 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
     setProgressMessage('Simplifying for your learning profile…')
     const body = new FormData()
     body.set('document_id', documentId)
+    body.set('reading_level', preferences.reading_level)
+    body.set('output_type', outputType)
+    body.set('max_sentence_length', String(maxSentenceLength))
+    preserveTerms.split(',').map(term => term.trim()).filter(Boolean).slice(0, 30).forEach(term => body.append('preserve_terms', term))
 
     try {
-      const result = await request<{ id: string; status: 'done'; simplified_text: string }>(
+      const result = await request<{
+        id: string
+        status: 'done'
+        simplified_text: string
+        original_flesch_kincaid_grade?: number | null
+        simplified_flesch_kincaid_grade?: number | null
+        reading_level?: string
+        output_type?: string
+        low_confidence?: boolean
+      }>(
         '/ai/simplify', session.access_token, { method: 'POST', body }
       )
       setCurrentDocument(previous => previous?.id === documentId
-        ? { ...previous, status: result.status, simplified_text: result.simplified_text, error_message: null }
+        ? {
+            ...previous,
+            status: result.status,
+            simplified_text: result.simplified_text,
+            error_message: null,
+            simplification_metadata: {
+              original_flesch_kincaid_grade: result.original_flesch_kincaid_grade,
+              simplified_flesch_kincaid_grade: result.simplified_flesch_kincaid_grade,
+              reading_level: result.reading_level,
+              output_type: result.output_type,
+              low_confidence: result.low_confidence,
+            },
+          }
         : previous)
       setOpenSection(0)
       await loadHistory()
@@ -373,6 +460,39 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
     } finally {
       setBusy(false)
       setProgressMessage('')
+    }
+  }
+
+  async function saveCorrectedText() {
+    if (!session?.access_token || !currentDocument) return
+    if (!correctedOriginal.trim()) {
+      setError('Enter the corrected text before saving.')
+      return
+    }
+    setBusy(true)
+    setError('')
+    try {
+      await request<{ id: string; status: 'processing' }>(
+        `/documents/${currentDocument.id}/text`,
+        session.access_token,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: correctedOriginal }),
+        }
+      )
+      setCurrentDocument(previous => previous ? {
+        ...previous,
+        original_text: correctedOriginal.trim(),
+        simplified_text: null,
+        simplification_metadata: null,
+        status: 'processing',
+      } : previous)
+      setEditingOriginal(false)
+      await simplify(currentDocument.id)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'The corrected text could not be saved.')
+      setBusy(false)
     }
   }
 
@@ -405,10 +525,12 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
         title: string
         source_type: SourceType
         status: 'processing'
+        ocr_confidence?: number | null
       }>('/documents/upload', session.access_token, { method: 'POST', body })
       const initial: DocumentRecord = {
         ...uploaded,
         created_at: new Date().toISOString(),
+        ocr_confidence: uploaded.ocr_confidence,
       }
       setCurrentDocument(initial)
       setHistory(previous => [initial, ...previous.filter(item => item.id !== initial.id)])
@@ -468,6 +590,24 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
     URL.revokeObjectURL(url)
   }
 
+  function sendToQuiz() {
+    if (!currentDocument || !simplifiedText) return
+    sessionStorage.removeItem('helen-ai:pending-note-title')
+    sessionStorage.removeItem('helen-ai:pending-note-content')
+    sessionStorage.setItem('helen-ai:pending-quiz-topic', currentDocument.title)
+    sessionStorage.setItem('helen-ai:pending-quiz-source', simplifiedText)
+    navigate('/notes')
+  }
+
+  function sendToNotes() {
+    if (!currentDocument || !simplifiedText) return
+    sessionStorage.removeItem('helen-ai:pending-quiz-topic')
+    sessionStorage.removeItem('helen-ai:pending-quiz-source')
+    sessionStorage.setItem('helen-ai:pending-note-title', currentDocument.title)
+    sessionStorage.setItem('helen-ai:pending-note-content', simplifiedText)
+    navigate('/notes')
+  }
+
   function playText(text: string) {
     const segments = splitSentences(text)
     speech.speakSegments(segments.length ? segments : [text])
@@ -476,14 +616,74 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
   function startReadAlong() {
     if (!readAlong) {
       setReadAlong(true)
-      speech.speakSegments(sentences)
+      speech.speakSegments(speechChunks)
     } else if (speech.isPaused) {
       speech.resume()
     } else if (speech.isSpeaking) {
       speech.pause()
     } else {
-      speech.speakSegments(sentences)
+      speech.speakSegments(speechChunks)
     }
+  }
+
+  function updateReadingAid(aid: 'none' | 'ruler' | 'focus-mask') {
+    const next = { ...preferences, reading_aid: aid }
+    setPreferences(next)
+    setRulerEnabled(aid === 'ruler' || aid === 'focus-mask')
+    if (aid !== 'none') setRulerTop(window.innerHeight / 2)
+    void savePreferences(next).catch(caught => {
+      setError(caught instanceof Error ? caught.message : 'The reading-aid setting could not be saved.')
+    })
+  }
+
+  function changeTextSize(delta: number) {
+    const next = { ...preferences, text_scale: Math.min(200, Math.max(110, preferences.text_scale + delta)) }
+    setPreferences(next)
+    void savePreferences(next).catch(caught => {
+      setError(caught instanceof Error ? caught.message : 'The text-size setting could not be saved.')
+    })
+  }
+
+  function changeFont(font: typeof preferences.font) {
+    const next = { ...preferences, font }
+    setPreferences(next)
+    void savePreferences(next).catch(caught => {
+      setError(caught instanceof Error ? caught.message : 'The font setting could not be saved.')
+    })
+  }
+
+  function changeLetterSpacing(delta: number) {
+    const next = { ...preferences, letter_spacing: Math.min(0.2, Math.max(0, preferences.letter_spacing + delta)) }
+    setPreferences(next)
+    void savePreferences(next).catch(caught => {
+      setError(caught instanceof Error ? caught.message : 'The spacing setting could not be saved.')
+    })
+  }
+
+  function navigateChunk(index: number) {
+    const next = Math.max(0, Math.min(readerSections.length - 1, index))
+    setOpenSection(next)
+    if (session?.user.id && currentDocument?.id) {
+      localStorage.setItem(`helen-ai:last-reading-part:${session.user.id}:${currentDocument.id}`, String(next))
+    }
+  }
+
+  function renderSpeechText(sentence: string, index: number) {
+    if (!readAlong || speech.activeSegment !== index || speech.activeCharacter < 0 || !preferences.tts.word_highlight) {
+      return sentence
+    }
+    const words = [...sentence.matchAll(/\S+/g)]
+    return words.map((word, wordIndex) => {
+      const start = word.index ?? 0
+      const end = start + word[0].length
+      const previousEnd = wordIndex === 0 ? 0 : (words[wordIndex - 1].index ?? 0) + words[wordIndex - 1][0].length
+      return (
+        <span key={`${start}-${wordIndex}`}>
+          {sentence.slice(previousEnd, start)}
+          <span className={speech.activeCharacter >= start && speech.activeCharacter < end ? 'rounded-sm bg-accent text-black' : undefined}>{word[0]}</span>
+        </span>
+      )
+    })
   }
 
   const presetDescription: Record<string, string> = {
@@ -495,7 +695,7 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-8 text-text">
+    <div className="mx-auto w-full max-w-6xl space-y-8 text-text">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold text-primary">DOCUMENT SIMPLIFIER</p>
@@ -588,6 +788,26 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
               />
             </label>
 
+            <label htmlFor="simplification-output" className="block space-y-1.5 text-sm font-medium text-text">
+              <span>Result format</span>
+              <select id="simplification-output" value={outputType} onChange={event => setOutputType(event.target.value as SimplificationOutput)} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text">
+                <option value="simplified_text">Simplified text</option>
+                <option value="bullet_summary">Bullet summary</option>
+                <option value="glossary">Glossary</option>
+                <option value="step_outline">Step-by-step outline</option>
+                <option value="audio_script">Audio script</option>
+                <option value="scan_fast">Scan fast: key points + one-minute summary</option>
+              </select>
+            </label>
+            <label htmlFor="preserve-terms" className="block space-y-1.5 text-sm font-medium text-text">
+              <span>Keep important terms <span className="font-normal text-text/60">(optional, comma-separated)</span></span>
+              <input id="preserve-terms" value={preserveTerms} onChange={event => setPreserveTerms(event.target.value)} maxLength={1000} placeholder="For example, photosynthesis, chlorophyll" className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2" />
+            </label>
+            <label htmlFor="max-sentence-length" className="block space-y-1.5 text-sm font-medium text-text">
+              <span>Maximum sentence length: {maxSentenceLength} words</span>
+              <input id="max-sentence-length" type="range" min={8} max={40} step={1} value={maxSentenceLength} onChange={event => setMaxSentenceLength(Number(event.target.value))} className="w-full accent-primary" />
+            </label>
+
             {error && (
               <div role="alert" className="space-y-2 rounded-md border border-red-700/40 bg-background p-3 text-sm text-text">
                 <p>{error}</p>
@@ -623,8 +843,8 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
         </div>
 
         <aside className="min-w-0 space-y-3 rounded-lg border border-text/15 bg-surface p-4 sm:p-5" aria-labelledby="document-history-heading">
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="document-history-heading" className="font-heading text-lg font-semibold text-text">Your documents</h2>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="document-history-heading" className="min-w-0 break-words font-heading text-lg font-semibold text-text">Your documents</h2>
             <button type="button" onClick={() => void loadHistory()} className="min-h-10 px-2 text-sm font-medium text-primary underline underline-offset-4">
               Refresh
             </button>
@@ -636,7 +856,7 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
           ) : history.length === 0 ? (
             <p className="rounded-md border border-text/15 bg-background p-4 text-sm text-text/70">Your saved documents will appear here.</p>
           ) : (
-            <ul className="max-h-[26rem] space-y-2 overflow-y-auto">
+            <ul aria-label="Document history" tabIndex={0} className="max-h-[26rem] space-y-2 overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               {history.map(document => (
                 <li key={document.id}>
                   <button
@@ -665,20 +885,77 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
               <p className="mt-1 text-sm text-text/70">Status: <span className="capitalize">{currentDocument.status}</span></p>
             </div>
             {simplifiedText && (
-              <button type="button" onClick={downloadSimplified} className="inline-flex min-h-11 items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                Download simplified text
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={downloadSimplified} className="inline-flex min-h-11 items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  Download simplified text
+                </button>
+                {!preview && <button type="button" onClick={sendToNotes} className="min-h-11 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary">Add to notes</button>}
+                {!preview && <button type="button" onClick={sendToQuiz} className="min-h-11 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary">Make a quiz</button>}
+              </div>
             )}
           </div>
 
           {currentDocument.status === 'processing' && (
             <p role="status" className="rounded-md border border-primary/30 bg-surface p-4 text-sm text-text">Your document is being prepared. This can take a few seconds.</p>
           )}
+          {typeof currentDocument.ocr_confidence === 'number' && (
+            <p className="rounded-md border border-text/15 bg-surface p-3 text-sm">
+              Scan text confidence: <strong>{Math.round(currentDocument.ocr_confidence)}%</strong>
+              {currentDocument.ocr_confidence < 65 && <span> — This scan may need checking. Paste corrected text if anything looks wrong.</span>}
+            </p>
+          )}
+          {simplifiedText && currentDocument.simplification_metadata && (
+            <div className="flex flex-wrap gap-x-6 gap-y-2 rounded-md border border-text/15 bg-surface p-3 text-sm">
+              <span>Original Flesch–Kincaid grade: <strong>{currentDocument.simplification_metadata.original_flesch_kincaid_grade ?? 'Not available'}</strong></span>
+              <span>Simplified Flesch–Kincaid grade: <strong>{currentDocument.simplification_metadata.simplified_flesch_kincaid_grade ?? 'Not available'}</strong></span>
+              {currentDocument.simplification_metadata.low_confidence && <span role="status">Please check this result against the original.</span>}
+            </div>
+          )}
+
+          {simplifiedText && (preset === 'dyslexia' || adhdEnabled) && (
+            <section aria-label="Reading controls" className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-lg border border-text/15 bg-surface p-3 shadow-sm">
+              {speech.supported && preferences.tts.enabled ? (
+                <>
+                  <button type="button" onClick={() => {
+                    if (speech.isPaused) speech.resume()
+                    else if (speech.isSpeaking) speech.pause()
+                    else { setReadAlong(true); speech.speakSegments(speechChunks) }
+                  }} aria-label={speech.isPaused ? 'Resume reading aloud' : speech.isSpeaking ? 'Pause reading aloud' : 'Read aloud'} className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    {speech.isPaused ? 'Resume audio' : speech.isSpeaking ? 'Pause audio' : 'Play audio'}
+                  </button>
+                  {speech.isSpeaking && <button type="button" onClick={() => { speech.stop(); setReadAlong(false) }} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm">Stop</button>}
+                </>
+              ) : <span role="status" className="text-sm text-text/70">{preferences.tts.enabled ? 'Audio is unavailable in this browser.' : 'Text-to-speech is turned off in your reading profile.'}</span>}
+              <button type="button" onClick={() => setShowOriginal(value => !value)} aria-pressed={showOriginal} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{showOriginal ? 'Hide original' : 'Show original'}</button>
+              <button type="button" onClick={() => updateReadingAid(rulerEnabled ? 'none' : 'ruler')} aria-pressed={rulerEnabled} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{rulerEnabled ? 'Turn off ruler' : 'Reading ruler'}</button>
+              <button type="button" onClick={() => changeTextSize(-5)} aria-label="Decrease reading text size" className="min-h-11 min-w-11 rounded-md border border-text/25 px-3 text-lg">A−</button>
+              <button type="button" onClick={() => changeTextSize(5)} aria-label="Increase reading text size" className="min-h-11 min-w-11 rounded-md border border-text/25 px-3 text-lg">A+</button>
+              <button type="button" onClick={() => changeLetterSpacing(-0.01)} aria-label="Decrease letter spacing" className="min-h-11 min-w-11 rounded-md border border-text/25 px-3">T−</button>
+              <button type="button" onClick={() => changeLetterSpacing(0.01)} aria-label="Increase letter spacing" className="min-h-11 min-w-11 rounded-md border border-text/25 px-3">T+</button>
+              <label className="flex min-h-11 max-w-full items-center gap-2 text-sm">
+                <span className="sr-only">Audio reading mode</span>
+                <select aria-label="Audio reading mode" value={speechMode} onChange={event => setSpeechMode(event.target.value as typeof speechMode)} className="min-h-11 max-w-full rounded-md border border-text/25 bg-background px-2" style={{ maxWidth: '11rem' }}>
+                  <option value="sentence">Read by sentence</option><option value="paragraph">Read by paragraph</option>
+                </select>
+              </label>
+              <label className="flex min-h-11 max-w-full items-center gap-2 text-sm">
+                <span className="sr-only">Reader font</span>
+                <select aria-label="Reader font" value={preferences.font} onChange={event => changeFont(event.target.value as typeof preferences.font)} className="min-h-11 max-w-full rounded-md border border-text/25 bg-background px-2" style={{ maxWidth: '10rem' }}>
+                  <option value="lexend">Lexend</option><option value="atkinson">Atkinson</option><option value="opendyslexic">OpenDyslexic</option><option value="verdana">Verdana</option><option value="system">System</option>
+                </select>
+              </label>
+              <span className="text-sm" aria-live="polite">{preferences.text_scale}%</span>
+            </section>
+          )}
+
+          {rulerEnabled && preset === 'dyslexia' && (
+            <div aria-hidden="true" className="pointer-events-none fixed left-0 right-0 z-20 h-10 border-y-2 border-primary/70 bg-accent/15" style={{ top: rulerTop }} />
+          )}
 
           {simplifiedText && preset === 'visual_impairment' && (
             <div className="space-y-5 rounded-lg border-2 border-primary bg-surface p-5 sm:p-8">
               <p className="text-sm font-semibold text-text">Voice-first version</p>
-              {speech.supported ? (
+              {speech.supported && preferences.tts.enabled ? (
                 <div className="flex flex-wrap items-center gap-3">
                   <button
                     type="button"
@@ -738,12 +1015,32 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
 
           {simplifiedText && !['visual_impairment', 'adhd'].includes(preset) && (
             <div className="grid gap-4 lg:grid-cols-2">
+              {(showOriginal || preset !== 'dyslexia') && (
               <article className="min-w-0 rounded-lg border border-text/15 bg-surface p-4 sm:p-5">
-                <h3 className="mb-3 font-heading text-lg font-semibold text-text">Original</h3>
-                <div className="max-h-[38rem] overflow-auto rounded-md border border-text/15 bg-background p-4">
-                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-text">{currentDocument.original_text}</p>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-heading text-lg font-semibold text-text">Original</h3>
+                  {currentDocument.source_type !== 'text' && (
+                    <button type="button" onClick={() => {
+                      setCorrectedOriginal(currentDocument.original_text ?? '')
+                      setEditingOriginal(value => !value)
+                    }} className="min-h-10 rounded-md border border-primary px-3 py-2 text-sm font-semibold text-primary">
+                      {editingOriginal ? 'Cancel correction' : 'Correct scan text'}
+                    </button>
+                  )}
                 </div>
+                {editingOriginal ? (
+                  <div className="space-y-3">
+                    <label htmlFor="corrected-ocr-text" className="sr-only">Edit text recognized from the scan</label>
+                    <textarea id="corrected-ocr-text" value={correctedOriginal} onChange={event => setCorrectedOriginal(event.target.value)} maxLength={250000} rows={12} className="w-full resize-y rounded-md border border-text/25 bg-background p-3 text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" />
+                    <button type="button" disabled={busy} onClick={() => void saveCorrectedText()} className="min-h-11 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{busy ? 'Saving…' : 'Save and simplify corrected text'}</button>
+                  </div>
+                ) : (
+                  <div role="region" aria-label="Original document text" tabIndex={0} className="max-h-[38rem] overflow-auto rounded-md border border-text/15 bg-background p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-text">{currentDocument.original_text}</p>
+                  </div>
+                )}
               </article>
+              )}
               <article className="min-w-0 rounded-lg border border-primary/30 bg-surface p-4 sm:p-5">
                 <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-heading text-lg font-semibold text-text">Simplified</h3>
@@ -769,24 +1066,33 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
                     </div>
                   )}
                 </div>
-                {preset === 'dyslexia' && readAlong ? (
-                  <div className="max-h-[38rem] space-y-2 overflow-auto rounded-md border border-text/15 bg-background p-4" style={{ fontFamily: 'var(--font-family)', letterSpacing: 'var(--font-letter-spacing)', lineHeight: 'var(--font-line-height)' }}>
-                    {sentences.map((sentence, index) => (
-                      <span key={`${sentence}-${index}`} className={`inline rounded-sm text-base ${speech.activeSegment === index ? 'bg-accent text-black' : 'text-text'}`}>
-                        {sentence}{' '}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="max-h-[38rem] overflow-auto rounded-md border border-text/15 bg-background p-4" style={preset === 'dyslexia' ? { fontFamily: 'var(--font-family)', letterSpacing: 'var(--font-letter-spacing)', lineHeight: 'var(--font-line-height)' } : undefined}>
-                    <p className="whitespace-pre-wrap break-words text-sm text-text">{simplifiedText}</p>
+                {chunkedReader && readerSections.length > 1 && (
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <button type="button" disabled={openSection <= 0} onClick={() => navigateChunk(openSection - 1)} className="min-h-11 rounded-md border border-text/25 px-3 py-2 disabled:opacity-50">Previous part</button>
+                    <span aria-live="polite" className="text-sm">Part {openSection + 1} of {readerSections.length}</span>
+                    <button type="button" disabled={openSection >= readerSections.length - 1} onClick={() => navigateChunk(openSection + 1)} className="min-h-11 rounded-md border border-text/25 px-3 py-2 disabled:opacity-50">{adhdEnabled ? 'Done, next' : 'Next part'}</button>
                   </div>
                 )}
+                <div
+                  role="region"
+                  aria-label="Simplified reading text"
+                  tabIndex={0}
+                  className="max-h-[38rem] overflow-auto rounded-md border border-text/15 bg-background p-4"
+                  onPointerMove={event => { if (rulerEnabled) setRulerTop(event.clientY - 20) }}
+                  onTouchMove={event => { if (rulerEnabled) setRulerTop(event.touches[0]?.clientY - 20) }}
+                  style={preset === 'dyslexia' ? { fontFamily: 'var(--reading-font)', fontSize: 'var(--reading-scale)', letterSpacing: 'var(--reading-letter-spacing)', wordSpacing: 'var(--reading-word-spacing)', lineHeight: 'var(--reading-line-height)' } : undefined}
+                >
+                  {chunkedReader && readerSections.length > 1
+                    ? <p className="whitespace-pre-wrap break-words" style={{ maxWidth: dyslexiaEnabled ? 'var(--reading-max-line-width)' : undefined }}>{readerSections[openSection]?.content}</p>
+                    : readAlong && preset === 'dyslexia'
+                      ? speechChunks.map((chunk, index) => <p key={`${index}-${chunk}`} className="whitespace-pre-wrap break-words" style={{ maxWidth: 'var(--reading-max-line-width)' }}>{renderSpeechText(chunk, index)}</p>)
+                      : <p className="whitespace-pre-wrap break-words" style={{ maxWidth: preset === 'dyslexia' ? 'var(--reading-max-line-width)' : undefined }}>{simplifiedText}</p>}
+                </div>
               </article>
             </div>
           )}
         </section>
       )}
-    </main>
+    </div>
   )
 }

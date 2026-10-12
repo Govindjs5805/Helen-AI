@@ -26,6 +26,15 @@
   --layout-captions-always-on: false;
   --layout-visual-notifications: false;
   --layout-forces-own-contrast: false;
+  --reading-font: 'Atkinson Hyperlegible', Verdana, sans-serif;
+  --reading-scale: 1.2;
+  --reading-letter-spacing: 0.04em;
+  --reading-word-spacing: 0.12em;
+  --reading-line-height: 1.75;
+  --reading-paragraph-spacing: 1.1em;
+  --reading-max-line-width: 62ch;
+  --reading-background: #fff8e8;
+  --reading-text: #3b3b3b;
   font-size: calc(16px * var(--font-size-multiplier));
 }
 
@@ -46,6 +55,81 @@ body {
   line-height: var(--font-line-height);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-align: left;
+}
+
+:root[data-reading-profile="true"] body {
+  font-family: var(--reading-font);
+  font-size: calc(1rem * var(--reading-scale));
+  letter-spacing: var(--reading-letter-spacing);
+  word-spacing: var(--reading-word-spacing);
+  line-height: var(--reading-line-height);
+}
+
+:root[data-reading-profile="true"] {
+  --text-xs: calc(0.75rem * var(--reading-scale));
+  --text-sm: calc(0.875rem * var(--reading-scale));
+  --text-base: calc(1rem * var(--reading-scale));
+  --text-lg: calc(1.125rem * var(--reading-scale));
+  --text-xl: calc(1.25rem * var(--reading-scale));
+  --text-2xl: calc(1.5rem * var(--reading-scale));
+  --text-3xl: calc(1.875rem * var(--reading-scale));
+  --text-4xl: calc(2.25rem * var(--reading-scale));
+  --text-5xl: calc(3rem * var(--reading-scale));
+  --text-6xl: calc(3.75rem * var(--reading-scale));
+  --text-7xl: calc(4.5rem * var(--reading-scale));
+  --text-8xl: calc(6rem * var(--reading-scale));
+  --text-9xl: calc(8rem * var(--reading-scale));
+  font-size: calc(16px * var(--font-size-multiplier));
+}
+
+:root[data-reading-profile="true"]:not(.dark) {
+  --color-background: var(--reading-background);
+  --color-surface: color-mix(in srgb, var(--reading-background) 55%, white);
+  --color-text: var(--reading-text);
+}
+
+:root[data-reading-profile="true"] body :where(p, li, blockquote) {
+  max-width: var(--reading-max-line-width);
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+:root[data-reading-profile="true"] body :where(*) {
+  text-transform: none;
+}
+
+:root[data-reading-profile="true"] p {
+  margin-block-end: var(--reading-paragraph-spacing);
+}
+
+:root[data-reading-profile="true"] :where(em, i) {
+  font-style: normal;
+}
+
+:root[data-quiet-ui="true"] {
+  --color-background: color-mix(in srgb, var(--color-background) 94%, #64748b);
+  --color-accent: #91b79d;
+}
+
+:root[data-attention-motion="reduced"] *,
+:root[data-attention-motion="reduced"] *::before,
+:root[data-attention-motion="reduced"] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {

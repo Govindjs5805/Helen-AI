@@ -14,8 +14,12 @@ const NAV_ITEMS = {
     { href: '/dashboard', label: 'Home', icon: HomeIcon },
     { href: '/ai-assistant', label: 'AI Assistant', icon: AssistantIcon },
     { href: '/documents', label: 'Documents', icon: DocumentsIcon },
+    { href: '/homework', label: 'Homework help', icon: DocumentsIcon },
+    { href: '/planner', label: 'Daily planner', icon: NotesIcon },
+    { href: '/focus', label: 'Focus mode', icon: ProgressIcon },
     { href: '/notes', label: 'Notes & Quizzes', icon: NotesIcon },
     { href: '/progress', label: 'Progress', icon: ProgressIcon },
+    { href: '/settings/reading', label: 'Accessibility settings', icon: NotesIcon },
   ],
   teacher: [
     { href: '/dashboard', label: 'Home', icon: HomeIcon },

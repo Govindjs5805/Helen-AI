@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/services/supabase'
+import { TeacherAttentionSummary } from '@/components/AttentionSharingViews'
 
 interface StudentProgressSummary {
   student_id: string
@@ -110,6 +111,7 @@ export function StudentProgress() {
       <p className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm text-text/75">
         This view shows learning activity only. Student-uploaded and simplified document content is private and is not shown here.
       </p>
+      <TeacherAttentionSummary studentCode={summary.student_id} />
     </section>
   )
 }

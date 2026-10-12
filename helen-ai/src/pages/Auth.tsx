@@ -21,9 +21,8 @@ const containerVariants: Variants = {
 }
 
 const slideUpFade: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { y: 24 },
   visible: {
-    opacity: 1,
     y: 0,
     transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   },
@@ -306,7 +305,7 @@ export function Auth() {
       </header>
 
       {/* ── Split layout ──────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col lg:flex-row">
+      <main className="flex flex-1 flex-col lg:flex-row">
         {/* Left panel — brand headline */}
         <motion.div
           variants={containerVariants}
@@ -329,7 +328,7 @@ export function Auth() {
 
           <motion.p
             variants={slideUpFade}
-            className="mt-5 max-w-md text-lg leading-relaxed text-text/70 sm:text-xl"
+            className="mt-5 max-w-md text-lg leading-relaxed text-text sm:text-xl"
           >
             Your study companion that actually gets where you&apos;re stuck.
             Helen listens to what you need, explains it in a way that clicks,
@@ -370,7 +369,7 @@ export function Auth() {
                       'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200',
                       mode === m
                         ? 'bg-surface text-text shadow-sm'
-                        : 'text-text/50 hover:text-text/80',
+                        : 'text-text/80 hover:text-text',
                     ].join(' ')}
                   >
                     {m === 'login' ? 'Sign in' : 'Create account'}
@@ -515,7 +514,7 @@ export function Auth() {
             </div>
           </motion.div>
         </motion.div>
-      </div>
+      </main>
     </div>
   )
 }

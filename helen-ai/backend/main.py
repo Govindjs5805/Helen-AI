@@ -327,6 +327,16 @@ async def authenticated_user(authorization: str | None = Header(default=None)) -
             headers={'apikey': anon_key, 'Authorization': f'Bearer {access_token}'},
         )
     if response.is_error:
+        try:
+            auth_error = response.json()
+        except ValueError:
+            auth_error = {}
+        error_code = auth_error.get('code') or auth_error.get('error') or 'unknown'
+        logger.warning(
+            'Supabase rejected an access token with HTTP %s (code: %s).',
+            response.status_code,
+            error_code,
+        )
         raise HTTPException(status_code=401, detail='Your session expired. Sign in and try again.')
 
     auth_user = response.json()

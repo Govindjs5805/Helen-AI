@@ -19,29 +19,34 @@ import { supabase } from '@/services/supabase'
  */
 export function OnboardingGuard({ children }: { children: React.ReactNode }) {
   const { session, profile, loading } = useAuth()
+  const userId = session?.user.id
   const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
   const [checking, setChecking] = useState(false)
 
   useEffect(() => {
-    if (!session || !profile) {
+    if (!userId || !profile) {
       setOnboardingComplete(null)
+      setChecking(false)
       return
     }
     if (profile.role !== 'student') {
       // Non-students never need to onboard.
       setOnboardingComplete(true)
+      setChecking(false)
       return
     }
 
     let cancelled = false
     setChecking(true)
 
-    supabase
-      .from('student_profiles')
-      .select('onboarding_completed')
-      .eq('id', session.user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    const checkOnboarding = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('student_profiles')
+          .select('onboarding_completed')
+          .eq('id', userId)
+          .maybeSingle()
+
         if (cancelled) return
         if (error) {
           // If the row doesn't exist yet, treat as "not yet onboarded".
@@ -51,13 +56,19 @@ export function OnboardingGuard({ children }: { children: React.ReactNode }) {
         } else {
           setOnboardingComplete(false)
         }
-        setChecking(false)
-      })
+      } catch {
+        if (!cancelled) setOnboardingComplete(false)
+      } finally {
+        if (!cancelled) setChecking(false)
+      }
+    }
+
+    void checkOnboarding()
 
     return () => {
       cancelled = true
     }
-  }, [session, profile])
+  }, [userId, profile?.role])
 
   if (loading || checking) {
     return (

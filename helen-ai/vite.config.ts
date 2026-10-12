@@ -7,10 +7,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      injectRegister: 'auto',
       registerType: 'autoUpdate',
       manifest: {
         name: 'Helen AI',
         short_name: 'Helen',
+        description: 'A personalized, accessible learning companion.',
         theme_color: '#1B5E3F',
         display: 'standalone',
         orientation: 'portrait',
@@ -18,19 +20,19 @@ export default defineConfig({
         background_color: '#FAFAF7',
         icons: [
           {
-            src: 'pwa-192x192.svg',
+            src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
           },
           {
-            src: 'pwa-512x512.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
           },
           {
-            src: 'pwa-512x512.svg',
+            src: 'pwa-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable',
           },
         ],

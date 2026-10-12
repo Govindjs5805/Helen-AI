@@ -298,7 +298,7 @@ export function Auth() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background text-text">
+    <div className="relative flex min-h-dvh flex-col bg-background text-text">
       {/* ── Navbar ─────────────────────────────────────────────────── */}
       <header className="absolute right-0 top-0 z-10 p-4 sm:p-6">
         <ThemeToggle />

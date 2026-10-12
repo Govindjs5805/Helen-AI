@@ -28,7 +28,7 @@ export function QuickThoughtCapture() {
   }
 
   return (
-    <aside className="fixed bottom-20 right-4 z-50 w-[min(22rem,calc(100vw-2rem))] md:bottom-5" aria-label="Quick thought capture">
+    <aside className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-50 w-[min(22rem,calc(100vw-2rem))] md:bottom-5" aria-label="Quick thought capture">
       {open && (
         <form onSubmit={event => void save(event)} onKeyDown={event => { if (event.key === 'Escape') setOpen(false) }} className="mb-2 space-y-3 rounded-xl border border-text/15 bg-surface p-4 shadow-lg">
           <label htmlFor="quick-thought" className="block text-sm font-semibold">Park this thought</label>

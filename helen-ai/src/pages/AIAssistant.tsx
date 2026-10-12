@@ -2,8 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
-
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
+import { apiFetch } from '@/services/api'
 
 interface Message {
   text: string
@@ -59,7 +58,7 @@ export function AIAssistant() {
     setLoading(true)
     setMessages(previous => [...previous, { text: message, sender: 'user' }])
     try {
-      const response = await fetch(`${API_URL}/ai/tutor`, {
+      const response = await apiFetch('/ai/tutor', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,

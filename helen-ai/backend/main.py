@@ -229,7 +229,11 @@ def parse_quiz_questions(response_text: str, question_count: int) -> list[QuizQu
         raise ValueError('A quiz question contains duplicate choices.')
     return questions
 
-app = FastAPI(title='Helen AI Document Service', version='1.0.0')
+app = FastAPI(
+    title='Helen AI Document Service',
+    version='1.0.0',
+    root_path=os.getenv('FASTAPI_ROOT_PATH', '').rstrip('/'),
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

@@ -4,7 +4,9 @@ const configuredApiUrl = import.meta.env.VITE_DOCUMENT_API_URL?.trim()
 
 export const apiBaseUrl = (
   configuredApiUrl ||
-  `${window.location.protocol}//${window.location.hostname}:8000`
+  (import.meta.env.DEV
+    ? `${window.location.protocol}//${window.location.hostname}:8000`
+    : '/api')
 ).replace(/\/$/, '')
 
 const API_TIMEOUT_MS = 90_000

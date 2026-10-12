@@ -2,14 +2,9 @@ import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } 
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
-<<<<<<< HEAD
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useNavigate } from 'react-router-dom'
-
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
-=======
 import { apiBaseUrl, apiFetch } from '@/services/api'
->>>>>>> e48a04f0342eedf9220960fa28e5738228f45fcd
 
 type DocumentStatus = 'processing' | 'done' | 'failed'
 type SourceType = 'pdf' | 'image' | 'text'

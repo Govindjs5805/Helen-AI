@@ -5,8 +5,7 @@ import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { TaskBreakdownPanel } from '@/components/TaskBreakdownPanel'
 import { Link } from 'react-router-dom'
-
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
+import { apiFetch } from '@/services/api'
 
 interface Dictation {
   lang: string
@@ -58,7 +57,7 @@ export function HomeworkHelp() {
     setBusy(true)
     setError('')
     try {
-      const response = await fetch(`${API_URL}/ai/tutor`, {
+      const response = await apiFetch('/ai/tutor', {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({

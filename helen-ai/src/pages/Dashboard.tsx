@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Navbar } from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
 import { useAccessibilityProfile } from '@/hooks/useAccessibilityProfile'
 import { useTheme } from '@/context/ThemeContext'
@@ -256,9 +255,7 @@ function TeacherDashboard({ name }: { name: string }) {
   }, [session?.user.id])
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-text">
-      <Navbar />
-      <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         <header>
           <h1 className="font-heading text-3xl font-bold text-text sm:text-4xl">
             Welcome back, {name}
@@ -310,8 +307,7 @@ function TeacherDashboard({ name }: { name: string }) {
             </ul>
           )}
         </section>
-      </main>
-    </div>
+    </main>
   )
 }
 
@@ -361,7 +357,7 @@ export function Dashboard() {
   // Loading states
   if (loading || profileLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-text/60">
+      <div className="flex min-h-[50vh] items-center justify-center text-text/60">
         Loading…
       </div>
     )
@@ -378,9 +374,7 @@ export function Dashboard() {
 
   if (profile?.role !== 'student') {
     return (
-      <div className="flex min-h-screen flex-col bg-background text-text">
-        <Navbar />
-        <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
           <h1 className="font-heading text-3xl font-bold text-text sm:text-4xl">
             Welcome back, {profile?.full_name || session.user.email}
           </h1>
@@ -393,15 +387,12 @@ export function Dashboard() {
           >
             Log out
           </button>
-        </main>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-text">
-      <Navbar />
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Greeting header */}
         <GreetingHeader
           name={profile?.full_name?.split(' ')[0] ?? session.user.email ?? 'there'}
@@ -444,7 +435,6 @@ export function Dashboard() {
         >
           Log out
         </button>
-      </main>
-    </div>
+    </main>
   )
 }

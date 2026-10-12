@@ -1,15 +1,10 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
-<<<<<<< HEAD
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { ParkedThoughtReview } from '@/components/ParkedThoughtReview'
 import { supabase } from '@/services/supabase'
-
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
-=======
 import { apiFetch } from '@/services/api'
->>>>>>> e48a04f0342eedf9220960fa28e5738228f45fcd
 
 interface QuizQuestion {
   question: string
@@ -382,16 +377,12 @@ export function Notes() {
         )}
       </header>
 
-<<<<<<< HEAD
       <div className="flex gap-2 border-b border-text/15 pb-3" role="group" aria-label="Notes and practice">
         <button type="button" aria-pressed="false" onClick={() => setActiveTab('notes')} className="min-h-11 rounded-md border border-text/25 px-4 py-2">Notes</button>
         <button type="button" aria-pressed="true" className="min-h-11 rounded-md bg-primary px-4 py-2 font-semibold text-white">Quiz</button>
       </div>
 
       <form onSubmit={generateQuiz} className="space-y-5 rounded-xl border border-text/15 bg-surface p-5 sm:p-7">
-=======
-      <div className="space-y-5 rounded-xl border border-text/15 bg-surface p-5 sm:p-7">
->>>>>>> e48a04f0342eedf9220960fa28e5738228f45fcd
         <div className="space-y-1.5">
           <label htmlFor="quiz-topic" className="text-sm font-semibold">What would you like to practice?</label>
           <input
@@ -452,12 +443,8 @@ export function Notes() {
           {loading ? 'Creating your quiz…' : quiz ? 'Generate another quiz' : 'Generate my quiz'}
         </button>
         {loading && <p role="status" aria-live="polite" className="text-sm text-text/70">Building clear, personalized questions…</p>}
-<<<<<<< HEAD
       </form>
       {voiceError && <p role="status" className="rounded-md border border-text/20 bg-surface p-3 text-sm">{voiceError}</p>}
-=======
-      </div>
->>>>>>> e48a04f0342eedf9220960fa28e5738228f45fcd
 
       {quiz && (
         <section aria-labelledby="quiz-heading" className="space-y-5">

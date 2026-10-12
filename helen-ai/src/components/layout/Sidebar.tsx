@@ -178,7 +178,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 w-72 transform bg-surface border-r border-black/10 dark:border-white/10',
+        'fixed inset-y-0 left-0 z-40 w-72 shrink-0 transform bg-surface border-r border-black/10 dark:border-white/10',
         'transition-transform duration-300 ease-in-out',
         isOpen ? 'translate-x-0' : '-translate-x-full',
         'md:translate-x-0 md:static md:inset-auto'

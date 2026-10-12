@@ -1,9 +1,9 @@
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://localhost:8000').replace(/\/$/, '')
+import { apiBaseUrl } from '@/services/api'
 
 export async function attentionRequest<T>(path: string, token: string, init?: RequestInit): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await fetch(`${apiBaseUrl}${path}`, {
       ...init,
       headers: {
         'Content-Type': 'application/json',

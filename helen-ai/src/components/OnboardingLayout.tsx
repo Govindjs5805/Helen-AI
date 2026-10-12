@@ -22,7 +22,7 @@ export function OnboardingLayout({
   stepLabels,
 }: OnboardingLayoutProps) {
   return (
-    <div className="flex min-h-screen flex-col bg-background text-text">
+    <div className="flex min-h-dvh flex-col bg-background text-text">
       {/* Top bar — minimal, no full navbar, just the brand and theme toggle. */}
       <header className="flex items-center justify-between px-5 py-4 sm:px-8 sm:py-5">
         <div className="flex items-center gap-2">

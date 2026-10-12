@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } 
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
-
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
+import { apiBaseUrl, apiFetch } from '@/services/api'
 
 type DocumentStatus = 'processing' | 'done' | 'failed'
 type SourceType = 'pdf' | 'image' | 'text'
@@ -40,12 +39,16 @@ class DocumentApiError extends Error {
 async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`${API_URL}${path}`, {
+    response = await apiFetch(path, {
       ...init,
       headers: { ...init?.headers, Authorization: `Bearer ${token}` },
     })
-  } catch {
-    throw new DocumentApiError('The document service is not reachable. Check that it is running, then retry.')
+  } catch (caught) {
+    throw new DocumentApiError(
+      caught instanceof Error
+        ? caught.message
+        : `Cannot reach the document service at ${apiBaseUrl}. Start the backend and check its configuration.`
+    )
   }
 
   const payload = await response.json().catch(() => ({})) as ApiErrorBody
@@ -258,7 +261,7 @@ export function DocumentSimplifier({ preview = false }: { preview?: boolean }) {
     return () => {
       cancelled = true
     }
-  }, [session?.access_token])
+  }, [session?.user.id])
 
   useEffect(() => {
     if (!lastDocumentKey || !currentDocument) return

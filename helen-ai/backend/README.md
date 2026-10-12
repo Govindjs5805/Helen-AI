@@ -21,10 +21,10 @@ This FastAPI service verifies Supabase access tokens, reads the student's primar
 5. Start the API from this directory:
 
    ```powershell
-   .\.venv\Scripts\python.exe -m uvicorn main:app --reload --port 8000
+   .\.venv\Scripts\python.exe -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
    ```
 
-Set `VITE_DOCUMENT_API_URL=http://127.0.0.1:8000` in the frontend `.env`. `FRONTEND_ORIGIN` accepts a comma-separated list of Vite origins.
+Set `VITE_DOCUMENT_API_URL` in the frontend `.env` only when the API is hosted at a different address. When it is blank, the frontend uses the same hostname on port `8000`, which supports testing from another device on the local network. For phone testing, set `FRONTEND_ORIGIN` in the backend `.env` to include the frontend's exact origin, such as `http://192.168.1.25:5173`, alongside any localhost origins. `FRONTEND_ORIGIN` accepts a comma-separated list of origins.
 
 ## Routes
 

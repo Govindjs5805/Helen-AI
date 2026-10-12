@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
-
-const API_URL = (import.meta.env.VITE_DOCUMENT_API_URL || 'http://192.168.1.2:8000').replace(/\/$/, '')
+import { apiFetch } from '@/services/api'
 
 interface QuizQuestion {
   question: string
@@ -38,8 +37,11 @@ export function Notes() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  async function generateQuiz(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+  async function generateQuiz() {
+    if (!topic.trim()) {
+      setError('Enter a topic to generate a quiz.')
+      return
+    }
     if (!session?.access_token) {
       setError('Your session has expired. Sign in again to generate a quiz.')
       return
@@ -51,7 +53,7 @@ export function Notes() {
     setQuiz(null)
     setAnswers({})
     try {
-      const response = await fetch(`${API_URL}/ai/quiz`, {
+      const response = await apiFetch('/ai/quiz', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -113,15 +115,20 @@ export function Notes() {
         </p>
       </header>
 
-      <form onSubmit={generateQuiz} className="space-y-5 rounded-xl border border-text/15 bg-surface p-5 sm:p-7">
+      <div className="space-y-5 rounded-xl border border-text/15 bg-surface p-5 sm:p-7">
         <div className="space-y-1.5">
           <label htmlFor="quiz-topic" className="text-sm font-semibold">What would you like to practice?</label>
           <input
             id="quiz-topic"
-            required
             maxLength={180}
             value={topic}
             onChange={event => setTopic(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                void generateQuiz()
+              }
+            }}
             placeholder="e.g. Photosynthesis, fractions, the water cycle"
             className="min-h-12 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           />
@@ -157,14 +164,15 @@ export function Notes() {
 
         {error && <p role="alert" className="rounded-md border border-red-700/30 bg-background p-3 text-sm">{error}</p>}
         <button
-          type="submit"
+          type="button"
+          onClick={() => void generateQuiz()}
           disabled={loading}
           className="min-h-12 w-full rounded-md bg-primary px-5 py-3 font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait disabled:opacity-60 sm:w-auto"
         >
           {loading ? 'Creating your quiz…' : quiz ? 'Generate another quiz' : 'Generate my quiz'}
         </button>
         {loading && <p role="status" aria-live="polite" className="text-sm text-text/70">Building clear, personalized questions…</p>}
-      </form>
+      </div>
 
       {quiz && (
         <section aria-labelledby="quiz-heading" className="space-y-5">

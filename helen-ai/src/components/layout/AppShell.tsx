@@ -1,11 +1,23 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { MobileBottomNav } from './MobileBottomNav'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
+    window.matchMedia('(min-width: 768px)').matches
+  )
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev)
+
+  useEffect(() => {
+    const desktopMedia = window.matchMedia('(min-width: 768px)')
+    const handleBreakpointChange = (event: MediaQueryListEvent) => {
+      setIsSidebarOpen(event.matches)
+    }
+
+    desktopMedia.addEventListener('change', handleBreakpointChange)
+    return () => desktopMedia.removeEventListener('change', handleBreakpointChange)
+  }, [])
 
   return (
     <div className="flex min-h-screen overflow-hidden bg-background text-text">

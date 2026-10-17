@@ -4,10 +4,17 @@ import {
   useEffect,
   useState,
   useCallback,
+  useRef,
   type ReactNode,
 } from 'react'
 import { supabase } from '@/services/supabase'
 import type { Profile, UserRole } from '@/types'
+
+export interface TeacherRegistrationDetails {
+  instituteName: string
+  place: string
+  designation?: string
+}
 
 // ---------------------------------------------------------------------------
 // Context shape
@@ -22,9 +29,10 @@ interface AuthContextType {
     email: string,
     password: string,
     fullName: string,
-    role: UserRole
-  ) => Promise<{ error: string | null }>
-  logout: () => Promise<void>
+    role: UserRole,
+    teacherDetails?: TeacherRegistrationDetails
+  ) => Promise<{ error: string | null; needsVerification?: boolean }>
+  logout: () => Promise<{ error: string | null }>
   refreshProfile: () => Promise<void>
 }
 
@@ -66,18 +74,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<import('@supabase/supabase-js').Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const profileRequestId = useRef(0)
 
   // Fetch the profiles row for the current user. Uses `maybeSingle()` so
   // a missing row doesn't error out — we fall back to deriving the profile
   // from the session's user_metadata so the UI never deadlocks.
   const fetchProfile = useCallback(async (currentSession: import('@supabase/supabase-js').Session | null) => {
     if (!currentSession?.user) {
+      profileRequestId.current += 1
       setProfile(null)
       return
     }
 
-    // Seed with session-derived data immediately so the UI can render.
-    setProfile(prev => prev ?? profileFromSession(currentSession))
+    const requestId = ++profileRequestId.current
+    setProfile(profileFromSession(currentSession))
 
     const { data, error } = await supabase
       .from('profiles')
@@ -85,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('id', currentSession.user.id)
       .maybeSingle()
 
-    if (!error && data) {
+    if (requestId === profileRequestId.current && !error && data) {
       setProfile(data as Profile)
     }
   }, [])
@@ -96,26 +106,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Initialize: listen for auth state changes.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session) {
-        fetchProfile(session)
-      }
-      setLoading(false)
-    })
+    let mounted = true
+    let authStateVersion = 0
+    let profileFetchTimer: number | undefined
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, authSession) => {
+      authStateVersion += 1
+      setSession(authSession)
+      setLoading(false)
+
+      if (!authSession) {
+        profileRequestId.current += 1
+        setProfile(null)
+        return
+      }
+
+      if (event === 'TOKEN_REFRESHED') return
+
+      const requestId = ++profileRequestId.current
+      setProfile(profileFromSession(authSession))
+      window.clearTimeout(profileFetchTimer)
+      profileFetchTimer = window.setTimeout(() => {
+        if (mounted && requestId === profileRequestId.current) {
+          void fetchProfile(authSession)
+        }
+      }, 0)
+    })
+
+    const initialAuthStateVersion = authStateVersion
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted || authStateVersion !== initialAuthStateVersion) return
       setSession(session)
       if (session) {
-        fetchProfile(session)
+        void fetchProfile(session)
       } else {
         setProfile(null)
       }
+      setLoading(false)
+    }).catch(error => {
+      if (!mounted || authStateVersion !== initialAuthStateVersion) return
+      console.error('[Helen AI] Could not restore the saved sign-in session.', error)
+      setSession(null)
+      setProfile(null)
+      setLoading(false)
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      window.clearTimeout(profileFetchTimer)
+      subscription.unsubscribe()
+    }
   }, [fetchProfile])
 
   // ---------------------------------------------------------------------------
@@ -138,22 +180,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchProfile]
   )
 
-  const register = useCallback(
-    async (email: string, password: string, fullName: string, role: UserRole) => {
+    const register = useCallback(
+    async (
+      email: string,
+      password: string,
+      fullName: string,
+      role: UserRole,
+      teacherDetails?: TeacherRegistrationDetails,
+    ) => {
       const { error: signUpError, data } =
         await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/auth/verified`,
             data: {
               full_name: fullName,
               role,
+              ...(role === 'teacher' && teacherDetails
+                ? {
+                    institute_name: teacherDetails.instituteName,
+                    place: teacherDetails.place,
+                    designation: teacherDetails.designation ?? '',
+                  }
+                : {}),
             },
           },
         })
 
       if (signUpError) {
         return { error: signUpError.message }
+      }
+
+      // Supabase returns a fake user (no identities) for an already-registered email
+      if (data.user && data.user.identities?.length === 0) {
+        return { error: 'That email is already registered. Try signing in.' }
       }
 
       // If the user was created, the database trigger will insert the profile.
@@ -170,14 +231,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } as unknown as import('@supabase/supabase-js').Session))
       }
 
-      return { error: null }
+      return { error: null, needsVerification: !data.session }
     },
     [fetchProfile]
   )
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut()
+    const { error } = await supabase.auth.signOut()
+    if (error) return { error: error.message }
     setProfile(null)
+    return { error: null }
   }, [])
 
   return (

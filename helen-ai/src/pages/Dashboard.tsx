@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { Navbar } from '@/components/Navbar'
 import { useAuth } from '@/context/AuthContext'
 import { useAccessibilityProfile } from '@/hooks/useAccessibilityProfile'
 import { useTheme } from '@/context/ThemeContext'
 import { supabase } from '@/services/supabase'
 import { Link } from 'react-router-dom'
+import { useReadingTheme } from '@/context/ReadingThemeContext'
+import { attentionRequest } from '@/services/attentionApi'
 import type { StudentProfile } from '@/types'
+import { AdminAttentionMetrics, ParentAttentionView } from '@/components/AttentionSharingViews'
 
 /** Greeting header with time awareness */
 function GreetingHeader({ name }: { name: string }) {
@@ -40,6 +42,42 @@ function GreetingHeader({ name }: { name: string }) {
         Welcome back to your learning journey.
       </p>
     </header>
+  )
+}
+
+function FocusRecap({ token }: { token: string }) {
+  const [task, setTask] = useState('')
+  const [lastTask, setLastTask] = useState('')
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    void Promise.all([
+      attentionRequest<{ tasks: Array<{ title: string; steps: Array<{ text: string; done: boolean }> }> }>('/attention/tasks', token),
+      attentionRequest<{ sessions: Array<{ task_label: string }> }>('/attention/focus-sessions?limit=1', token),
+    ]).then(([tasks, sessions]) => {
+      if (!active) return
+      const next = tasks.tasks.find(item => item.steps.some(step => !step.done))
+      setTask(next?.steps.find(step => !step.done)?.text ?? '')
+      setLastTask(sessions.sessions[0]?.task_label ?? '')
+    }).catch(caught => {
+      if (active) setError(caught instanceof Error ? caught.message : 'Your focus recap is unavailable.')
+    })
+    return () => { active = false }
+  }, [token])
+
+  return (
+    <section className="rounded-2xl border border-primary/25 bg-primary/5 p-5" aria-labelledby="focus-recap-title">
+      <h2 id="focus-recap-title" className="font-heading text-xl font-semibold">Where you left off</h2>
+      {lastTask && <p className="mt-2 text-sm">Last focus session: <strong>{lastTask}</strong></p>}
+      {task && <p className="mt-2 text-sm">Next small step: <strong>{task}</strong></p>}
+      {!lastTask && !task && !error && <p className="mt-2 text-sm text-text/70">Your next task can start with one small step.</p>}
+      {error && <p role="status" className="mt-2 text-xs text-text/65">Focus recap is not available while offline.</p>}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link to="/focus" className="inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white">Start focus mode</Link>
+        <Link to="/planner" className="inline-flex min-h-11 items-center rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary">Open today’s plan</Link>
+      </div>
+    </section>
   )
 }
 
@@ -217,9 +255,7 @@ function TeacherDashboard({ name }: { name: string }) {
   }, [session?.user.id])
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-text">
-      <Navbar />
-      <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
         <header>
           <h1 className="font-heading text-3xl font-bold text-text sm:text-4xl">
             Welcome back, {name}
@@ -271,8 +307,7 @@ function TeacherDashboard({ name }: { name: string }) {
             </ul>
           )}
         </section>
-      </main>
-    </div>
+    </main>
   )
 }
 
@@ -287,6 +322,7 @@ export function Dashboard() {
     session?.user.id
   )
   const { activeDisabilityPreset } = useTheme()
+  const { adhdEnabled, attentionPreferences } = useReadingTheme()
   const isVisualImpairment = activeDisabilityPreset === 'visual_impairment'
 
   useEffect(() => {
@@ -321,7 +357,7 @@ export function Dashboard() {
   // Loading states
   if (loading || profileLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-text/60">
+      <div className="flex min-h-[50vh] items-center justify-center text-text/60">
         Loading…
       </div>
     )
@@ -338,16 +374,12 @@ export function Dashboard() {
 
   if (profile?.role !== 'student') {
     return (
-      <div className="flex min-h-screen flex-col bg-background text-text">
-        <Navbar />
-        <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
           <h1 className="font-heading text-3xl font-bold text-text sm:text-4xl">
             Welcome back, {profile?.full_name || session.user.email}
           </h1>
-          <div className="mt-8 rounded-2xl border border-black/10 bg-surface p-8 text-center dark:border-white/10">
-            <p className="text-text/60">
-              {profile?.role === 'parent' ? 'Parent dashboard coming soon' : 'Admin dashboard coming soon'}
-            </p>
+          <div className="mt-8">
+            {profile?.role === 'parent' ? <ParentAttentionView /> : profile?.role === 'admin' ? <AdminAttentionMetrics /> : null}
           </div>
           <button
             onClick={logout}
@@ -355,15 +387,12 @@ export function Dashboard() {
           >
             Log out
           </button>
-        </main>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-text">
-      <Navbar />
-      <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Greeting header */}
         <GreetingHeader
           name={profile?.full_name?.split(' ')[0] ?? session.user.email ?? 'there'}
@@ -381,13 +410,16 @@ export function Dashboard() {
         {/* Student dashboard */}
         {studentProfile && (
           <section className="mt-8 space-y-8">
+            {adhdEnabled && session?.access_token && <FocusRecap token={session.access_token} />}
             {/* Streak/XP ring — the one bold gamified moment */}
-            <div className="flex justify-center py-4">
-              <StreakProgressRing
-                streak={studentActivity?.currentStreak ?? 0}
-                xpTotal={studentActivity?.xpTotal ?? 0}
-              />
-            </div>
+            {(!adhdEnabled || attentionPreferences.gamification !== 'off') && (
+              <div className="flex justify-center py-4">
+                <StreakProgressRing
+                  streak={studentActivity?.currentStreak ?? 0}
+                  xpTotal={studentActivity?.xpTotal ?? 0}
+                />
+              </div>
+            )}
 
             {/* Quick access cards — ADHD focus mode shows only one */}
             <QuickAccessCards />
@@ -403,7 +435,6 @@ export function Dashboard() {
         >
           Log out
         </button>
-      </main>
-    </div>
+    </main>
   )
 }

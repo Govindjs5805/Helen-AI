@@ -2,8 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { OnboardingGuard } from '@/components/OnboardingGuard'
 import { Auth } from '@/pages/Auth'
+import { AuthVerified } from '@/pages/AuthVerified'
 import { Onboarding } from '@/pages/Onboarding'
 import { Dashboard } from '@/pages/Dashboard'
+import { Dashboard as TeacherDashboard } from '@/pages/teacher/Dashboard'
+import { ClassroomDetail } from '@/pages/teacher/ClassroomDetail'
+import { StudentProgress as TeacherStudentProgress } from '@/pages/teacher/StudentProgress'
 import { AppShell } from '@/components/layout/AppShell'
 import { AIAssistant } from '@/pages/AIAssistant'
 import { Documents } from '@/pages/Documents'
@@ -16,6 +20,10 @@ import { Users } from '@/pages/Users'
 import { Reports } from '@/pages/Reports'
 import { ThemePreview } from '@/pages/dev/ThemePreview'
 import { DocumentSimplifierPreview } from '@/pages/dev/DocumentSimplifierPreview'
+import { ReadingSettings } from '@/pages/ReadingSettings'
+import { HomeworkHelp } from '@/pages/HomeworkHelp'
+import { FocusMode } from '@/pages/FocusMode'
+import { Planner } from '@/pages/Planner'
 
 function RootRedirect() {
   const { session, profile, loading } = useAuth()
@@ -31,10 +39,12 @@ function RootRedirect() {
 }
 
 export default function App() {
+  const { profile } = useAuth()
   return (
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/verified" element={<AuthVerified />} />
       <Route path="/dev/theme-preview" element={<ThemePreview />} />
       <Route path="/dev/document-simplifier" element={<DocumentSimplifierPreview />} />
       <Route path="/onboarding" element={<Onboarding />} />
@@ -43,7 +53,7 @@ export default function App() {
         element={
           <OnboardingGuard>
             <AppShell>
-              <Dashboard />
+              {profile?.role === 'teacher' ? <TeacherDashboard /> : <Dashboard />}
             </AppShell>
           </OnboardingGuard>
         }
@@ -69,6 +79,36 @@ export default function App() {
         }
       />
       <Route
+        path="/homework"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <HomeworkHelp />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/focus"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <FocusMode />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/planner"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <Planner />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
         path="/notes"
         element={
           <OnboardingGuard>
@@ -89,11 +129,31 @@ export default function App() {
         }
       />
       <Route
+        path="/settings/reading"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <ReadingSettings />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
+        path="/classrooms/:classroomId"
+        element={
+          <OnboardingGuard>
+            <AppShell>
+              <ClassroomDetail />
+            </AppShell>
+          </OnboardingGuard>
+        }
+      />
+      <Route
         path="/classrooms"
         element={
           <OnboardingGuard>
             <AppShell>
-              <Classrooms />
+              {profile?.role === 'teacher' ? <TeacherDashboard /> : <Classrooms />}
             </AppShell>
           </OnboardingGuard>
         }
@@ -113,7 +173,7 @@ export default function App() {
         element={
           <OnboardingGuard>
             <AppShell>
-              <StudentProgress />
+              {profile?.role === 'teacher' ? <TeacherStudentProgress /> : <StudentProgress />}
             </AppShell>
           </OnboardingGuard>
         }

@@ -1,11 +1,5 @@
-import { Placeholder } from './Placeholder'
+import { ParentAttentionView } from '@/components/AttentionSharingViews'
 
 export function MyChild() {
-  return (
-    <Placeholder
-      title="My Child's Progress"
-      description="Monitor your child's learning journey"
-      icon="👶"
-    />
-  )
+  return <ParentAttentionView />
 }

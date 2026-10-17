@@ -9,19 +9,26 @@ import { supabase } from '@/services/supabase'
 import { useAuth } from '@/context/AuthContext'
 import { getPresetName, getThemeTokens } from '@/theme/presets'
 import { useTheme } from '@/context/ThemeContext'
+import {
+  DEFAULT_ATTENTION_PREFERENCES,
+  DEFAULT_READING_PREFERENCES,
+  useReadingTheme,
+} from '@/context/ReadingThemeContext'
+import { ReadingProfileEditor } from '@/components/ReadingProfileEditor'
+import { AttentionProfileEditor } from '@/components/AttentionProfileEditor'
 import type {
   OnboardingSubmitData,
   AccessibilityNeedType,
   PreferredPace,
+  ReadingPreferences,
+  AttentionPreferences,
 } from '@/types'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const TOTAL_STEPS = 3
-
-const STEP_LABELS = ['About you', 'How you learn', 'Review']
+const BASE_STEP_LABELS = ['About you', 'How you learn']
 
 const NEED_OPTIONS: { value: AccessibilityNeedType; label: string; description: string }[] = [
   { value: 'dyslexia', label: 'Dyslexia', description: 'Reading takes more time or feels different' },
@@ -51,7 +58,10 @@ function paceLabel(p: PreferredPace): string {
 
 export function Onboarding() {
   const { session, profile } = useAuth()
+  const { setDyslexiaEnabled, setAdhdEnabled } = useReadingTheme()
   const [step, setStep] = useState(1)
+  const [readingPreferences, setReadingPreferences] = useState<ReadingPreferences>(DEFAULT_READING_PREFERENCES)
+  const [attentionPreferences, setAttentionPreferences] = useState<AttentionPreferences>(DEFAULT_ATTENTION_PREFERENCES)
 
   // ── Step 1 data ──────────────────────────────────────────────────────────
   const [age, setAge] = useState<string>('')
@@ -76,6 +86,18 @@ export function Onboarding() {
 
   // ── Redirect if already completed (fetched from DB, not from profile) ────────
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
+  const dyslexiaSelected = selectedNeeds.has('dyslexia')
+  const adhdSelected = selectedNeeds.has('adhd')
+  const readingStep = dyslexiaSelected ? 3 : 0
+  const attentionStep = 3 + Number(dyslexiaSelected)
+  const reviewStep = 3 + Number(dyslexiaSelected) + Number(adhdSelected)
+  const stepLabels = [
+    ...BASE_STEP_LABELS,
+    ...(dyslexiaSelected ? ['Reading profile'] : []),
+    ...(adhdSelected ? ['Attention profile'] : []),
+    'Review',
+  ]
+  const totalSteps = stepLabels.length
 
   // ── ALL hooks must be declared before any early return ─────────────────────
 
@@ -134,7 +156,19 @@ export function Onboarding() {
     if (step === 1) {
       if (!validateStep1()) return
     }
-    setStep(s => Math.min(s + 1, TOTAL_STEPS))
+    if (step === 2) {
+      setStep(dyslexiaSelected ? readingStep : adhdSelected ? attentionStep : reviewStep)
+      return
+    }
+    if (dyslexiaSelected && step === readingStep) {
+      setStep(adhdSelected ? attentionStep : reviewStep)
+      return
+    }
+    if (adhdSelected && step === attentionStep) {
+      setStep(reviewStep)
+      return
+    }
+    setStep(s => Math.min(s + 1, reviewStep))
   }
 
   function handleBack() {
@@ -182,6 +216,8 @@ export function Onboarding() {
         learning_goals: learningGoals || undefined,
         preferred_pace: preferredPace,
         onboarding_completed: true,
+        reading_preferences: readingPreferences,
+        attention_preferences: attentionPreferences,
       },
       accessibility_needs: needsPayload,
     }
@@ -199,6 +235,8 @@ export function Onboarding() {
           learning_goals: profilePayload.student_profile.learning_goals ?? null,
           preferred_pace: profilePayload.student_profile.preferred_pace,
           onboarding_completed: true,
+          reading_preferences: profilePayload.student_profile.reading_preferences,
+          attention_preferences: profilePayload.student_profile.attention_preferences,
         },
         { onConflict: 'id' }
       )
@@ -212,10 +250,16 @@ export function Onboarding() {
     }
 
     // Delete existing needs and re-insert (simpler than upsert for an array).
-    await supabase
+    const { error: deleteNeedsError } = await supabase
       .from('accessibility_needs')
       .delete()
       .eq('student_id', userId)
+
+    if (deleteNeedsError) {
+      setSubmitError("Couldn't update your accessibility preferences. Check your connection and try again.")
+      setSubmitting(false)
+      return
+    }
 
     if (needsPayload.length > 0) {
       const { error: needsError } = await supabase
@@ -237,6 +281,8 @@ export function Onboarding() {
       }
     }
 
+    setDyslexiaEnabled(selectedNeeds.has('dyslexia'))
+    setAdhdEnabled(selectedNeeds.has('adhd'))
     setSubmitting(false)
     setSubmitSuccess(true)
   }
@@ -247,8 +293,8 @@ export function Onboarding() {
   return (
     <OnboardingLayout
       currentStep={step}
-      totalSteps={TOTAL_STEPS}
-      stepLabels={STEP_LABELS}
+      totalSteps={totalSteps}
+      stepLabels={stepLabels}
     >
       {submitSuccess ? (
         <SuccessMessage />
@@ -295,7 +341,56 @@ export function Onboarding() {
                 />
               )}
 
-              {step === 3 && (
+              {step === readingStep && dyslexiaSelected && (
+                <div className="space-y-6">
+                  <ReadingProfileEditor
+                    preferences={readingPreferences}
+                    onChange={setReadingPreferences}
+                    onPreset={preset => {
+                      if (preset === 'easy') setReadingPreferences({ ...DEFAULT_READING_PREFERENCES, severity: 'mild', text_scale: 110, line_height: 1.6, background_tint: 'white', density: 'full' })
+                      if (preset === 'maximum') setReadingPreferences({ ...DEFAULT_READING_PREFERENCES, severity: 'severe', text_scale: 150, letter_spacing: 0.08, word_spacing: 0.2, line_height: 1.9, paragraph_spacing: 1.5, max_line_chars: 55, reading_aid: 'ruler', density: 'chunked' })
+                    }}
+                  />
+                  <div className="flex justify-between">
+                    <button type="button" onClick={handleBack} className="min-h-11 rounded-md border border-text/25 px-5 py-2 text-sm font-semibold">Back</button>
+                    <button type="button" onClick={handleNext} className="min-h-11 rounded-md bg-primary px-6 py-2 text-sm font-semibold text-white">Continue</button>
+                  </div>
+                </div>
+              )}
+
+              {step === attentionStep && adhdSelected && (
+                <div className="space-y-6">
+                  <AttentionProfileEditor
+                    preferences={attentionPreferences}
+                    onChange={setAttentionPreferences}
+                    onPreset={preset => {
+                      if (preset === 'light') setAttentionPreferences({
+                        ...DEFAULT_ATTENTION_PREFERENCES,
+                        focus_session_minutes: 20,
+                        break_minutes: 5,
+                        distraction_level: 'low',
+                        gamification: 'light',
+                        quiet_ui: false,
+                      })
+                      if (preset === 'strong') setAttentionPreferences({
+                        ...DEFAULT_ATTENTION_PREFERENCES,
+                        focus_session_minutes: 10,
+                        break_minutes: 5,
+                        distraction_level: 'high',
+                        chunk_size: 'one_paragraph',
+                        quiet_ui: true,
+                      })
+                    }}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <button type="button" onClick={handleBack} className="min-h-11 rounded-md border border-text/25 px-5 py-2 text-sm font-semibold">Back</button>
+                    <button type="button" onClick={handleNext} className="min-h-11 rounded-md bg-primary px-6 py-2 text-sm font-semibold text-white">Continue</button>
+                    <button type="button" onClick={() => setStep(reviewStep)} className="min-h-11 px-3 py-2 text-sm underline underline-offset-4">Skip for now</button>
+                  </div>
+                </div>
+              )}
+
+              {step === reviewStep && (
                 <Step3
                   age={age}
                   grade={grade}
@@ -309,6 +404,12 @@ export function Onboarding() {
                   onSubmit={handleSubmit}
                   onBack={handleBack}
                   onEditStep={setStep}
+                  readingPreferences={readingPreferences}
+                  hasDyslexia={dyslexiaSelected}
+                  readingProfileStep={3}
+                  attentionPreferences={attentionPreferences}
+                  hasAdhd={adhdSelected}
+                  attentionProfileStep={attentionStep}
                 />
               )}
             </motion.div>
@@ -744,6 +845,12 @@ interface Step3Props {
   onSubmit: (e: FormEvent) => void
   onBack: () => void
   onEditStep: (step: number) => void
+  readingPreferences: ReadingPreferences
+  hasDyslexia: boolean
+  readingProfileStep: number
+  attentionPreferences: AttentionPreferences
+  hasAdhd: boolean
+  attentionProfileStep: number
 }
 
 function Step3({
@@ -759,6 +866,12 @@ function Step3({
   onSubmit,
   onBack,
   onEditStep,
+  readingPreferences,
+  hasDyslexia,
+  readingProfileStep,
+  attentionPreferences,
+  hasAdhd,
+  attentionProfileStep,
 }: Step3Props) {
   const needsArray = Array.from(selectedNeeds)
   const getNeedLabel = (v: AccessibilityNeedType) =>
@@ -802,6 +915,22 @@ function Step3({
           </SummaryRow>
           <SummaryRow label="Preferred pace">{paceLabel(preferredPace)}</SummaryRow>
         </SummarySection>
+
+        {hasDyslexia && (
+          <SummarySection title="Reading profile" onEdit={() => onEditStep(readingProfileStep)} editLabel="Edit">
+            <SummaryRow label="Font">{readingPreferences.font}</SummaryRow>
+            <SummaryRow label="Text size">{readingPreferences.text_scale}%</SummaryRow>
+            <SummaryRow label="Reading aid">{readingPreferences.reading_aid}</SummaryRow>
+          </SummarySection>
+        )}
+
+        {hasAdhd && (
+          <SummarySection title="Attention profile" onEdit={() => onEditStep(attentionProfileStep)} editLabel="Edit">
+            <SummaryRow label="Focus session">{attentionPreferences.focus_session_minutes} minutes</SummaryRow>
+            <SummaryRow label="Break">{attentionPreferences.break_minutes} minutes</SummaryRow>
+            <SummaryRow label="Gamification">{attentionPreferences.gamification}</SummaryRow>
+          </SummarySection>
+        )}
 
         {/* How you learn */}
         <SummarySection

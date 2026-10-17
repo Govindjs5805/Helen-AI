@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
+import { LogoutButton } from '@/components/LogoutButton'
 
 // Local cn helper (no external utility dep needed)
 function cn(...classes: (string | boolean | undefined | null)[]): string {
@@ -13,8 +14,12 @@ const NAV_ITEMS = {
     { href: '/dashboard', label: 'Home', icon: HomeIcon },
     { href: '/ai-assistant', label: 'AI Assistant', icon: AssistantIcon },
     { href: '/documents', label: 'Documents', icon: DocumentsIcon },
+    { href: '/homework', label: 'Homework help', icon: DocumentsIcon },
+    { href: '/planner', label: 'Daily planner', icon: NotesIcon },
+    { href: '/focus', label: 'Focus mode', icon: ProgressIcon },
     { href: '/notes', label: 'Notes & Quizzes', icon: NotesIcon },
     { href: '/progress', label: 'Progress', icon: ProgressIcon },
+    { href: '/settings/reading', label: 'Accessibility settings', icon: NotesIcon },
   ],
   teacher: [
     { href: '/dashboard', label: 'Home', icon: HomeIcon },
@@ -173,7 +178,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 w-72 transform bg-surface border-r border-black/10 dark:border-white/10',
+        'fixed inset-y-0 left-0 z-40 w-72 shrink-0 transform bg-surface border-r border-black/10 dark:border-white/10',
         'transition-transform duration-300 ease-in-out',
         isOpen ? 'translate-x-0' : '-translate-x-full',
         'md:translate-x-0 md:static md:inset-auto'
@@ -265,6 +270,9 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
             </div>
           </div>
           <ThemeToggle className="w-full" />
+          <div className="mt-2">
+            <LogoutButton />
+          </div>
         </div>
       </div>
     </aside>

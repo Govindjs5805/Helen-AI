@@ -4,6 +4,7 @@ import { motion, type Variants } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { RoleSelector } from '@/components/RoleSelector'
+import { VerifyPending } from '@/components/VerifyPending'
 import type { AuthMode, UserRole } from '@/types'
 
 // ---------------------------------------------------------------------------
@@ -21,9 +22,8 @@ const containerVariants: Variants = {
 }
 
 const slideUpFade: Variants = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { y: 24 },
   visible: {
-    opacity: 1,
     y: 0,
     transition: { duration: 0.55, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   },
@@ -196,15 +196,20 @@ export function Auth() {
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<UserRole>('student')
+  const [instituteName, setInstituteName] = useState('')
+  const [place, setPlace] = useState('')
+  const [designation, setDesignation] = useState('')
 
   // Validation errors
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [fullNameError, setFullNameError] = useState<string | null>(null)
+  const [teacherDetailsError, setTeacherDetailsError] = useState<string | null>(null)
 
   // Submission state
   const [buttonState, setButtonState] = useState<ButtonState>('idle')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
 
   // AuthGuard: if session + profile are both loaded, route based on role.
   // We don't redirect on initial mount (loading=true) — that would briefly show the
@@ -215,19 +220,40 @@ export function Auth() {
     }
     return <Navigate to="/dashboard" replace />
   }
+  if (pendingEmail) {
+    return (
+      <VerifyPending
+        email={pendingEmail}
+        password={password}
+        onBack={() => {
+          setPendingEmail(null)
+          setButtonState('idle')
+          setMode('login')
+        }}
+      />
+    )
+  }
 
   function validateAll(): boolean {
     const e = validateEmail(email)
     const p = validatePassword(password)
     const n = mode === 'register' ? validateName(fullName) : null
+    const teacherError = mode === 'register' && role === 'teacher'
+      ? !instituteName.trim()
+        ? 'Institute name is required'
+        : !place.trim()
+          ? 'Place is required'
+          : null
+      : null
 
     setEmailError(e)
     setPasswordError(p)
     setFullNameError(n)
-    return !e && !p && !n
+    setTeacherDetailsError(teacherError)
+    return !e && !p && !n && !teacherError
   }
 
-  async function handleSubmit(e: FormEvent) {
+    async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setSubmitError(null)
 
@@ -242,30 +268,41 @@ export function Auth() {
     if (mode === 'login') {
       const { error } = await login(email, password)
       if (error) {
+        // Unverified account: show the "verify your email" page instead of an error
+        if (error.includes('Email not confirmed')) {
+          setButtonState('idle')
+          setPendingEmail(email)
+          return
+        }
         setButtonState('error')
         const msg =
           error.toLowerCase().includes('invalid login credentials')
             ? 'Wrong email or password. Try again.'
-            : error.includes('Email not confirmed')
-            ? 'Check your inbox — we sent a confirmation link.'
             : error
         setSubmitError(msg)
         setTimeout(() => setButtonState('idle'), 1500)
         return
       }
     } else {
-      const { error } = await register(email, password, fullName, role)
+      const { error, needsVerification } = await register(email, password, fullName, role, role === 'teacher'
+        ? { instituteName: instituteName.trim(), place: place.trim(), designation: designation.trim() }
+        : undefined)
       if (error) {
         setButtonState('error')
         const msg =
           error.toLowerCase().includes('already registered') ||
           error.toLowerCase().includes('already exists')
             ? "That email's already registered. Try signing in."
-            : error.includes('Email not confirmed')
-            ? 'Check your inbox — we sent a confirmation link.'
             : error
         setSubmitError(msg)
         setTimeout(() => setButtonState('idle'), 1500)
+        return
+      }
+
+      // Email confirmation required: show the "verifying your email" page
+      if (needsVerification) {
+        setButtonState('idle')
+        setPendingEmail(email)
         return
       }
     }
@@ -279,19 +316,20 @@ export function Auth() {
     setEmailError(null)
     setPasswordError(null)
     setFullNameError(null)
+    setTeacherDetailsError(null)
     setSubmitError(null)
     setButtonState('idle')
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background text-text">
+    <div className="relative flex min-h-dvh flex-col bg-background text-text">
       {/* ── Navbar ─────────────────────────────────────────────────── */}
       <header className="absolute right-0 top-0 z-10 p-4 sm:p-6">
         <ThemeToggle />
       </header>
 
       {/* ── Split layout ──────────────────────────────────────────── */}
-      <div className="flex flex-1 flex-col lg:flex-row">
+      <main className="flex flex-1 flex-col lg:flex-row">
         {/* Left panel — brand headline */}
         <motion.div
           variants={containerVariants}
@@ -314,7 +352,7 @@ export function Auth() {
 
           <motion.p
             variants={slideUpFade}
-            className="mt-5 max-w-md text-lg leading-relaxed text-text/70 sm:text-xl"
+            className="mt-5 max-w-md text-lg leading-relaxed text-text sm:text-xl"
           >
             Your study companion that actually gets where you&apos;re stuck.
             Helen listens to what you need, explains it in a way that clicks,
@@ -355,7 +393,7 @@ export function Auth() {
                       'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200',
                       mode === m
                         ? 'bg-surface text-text shadow-sm'
-                        : 'text-text/50 hover:text-text/80',
+                        : 'text-text/80 hover:text-text',
                     ].join(' ')}
                   >
                     {m === 'login' ? 'Sign in' : 'Create account'}
@@ -436,6 +474,50 @@ export function Auth() {
                   </motion.div>
                 )}
 
+                {mode === 'register' && role === 'teacher' && (
+                  <motion.div
+                    key="teacher-details"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="space-y-5 overflow-hidden"
+                  >
+                    <FormInput
+                      id="teacher-institute"
+                      label="Institute name"
+                      value={instituteName}
+                      onChange={value => {
+                        setInstituteName(value)
+                        if (teacherDetailsError) setTeacherDetailsError(value.trim() ? null : 'Institute name is required')
+                      }}
+                      error={teacherDetailsError && !instituteName.trim() ? teacherDetailsError : null}
+                      placeholder="Your school or institution"
+                      autoComplete="organization"
+                    />
+                    <FormInput
+                      id="teacher-place"
+                      label="Place"
+                      value={place}
+                      onChange={value => {
+                        setPlace(value)
+                        if (teacherDetailsError && instituteName.trim()) setTeacherDetailsError(value.trim() ? null : 'Place is required')
+                      }}
+                      error={teacherDetailsError && instituteName.trim() ? teacherDetailsError : null}
+                      placeholder="City or location"
+                      autoComplete="address-level2"
+                    />
+                    <FormInput
+                      id="teacher-designation"
+                      label="Designation (optional)"
+                      value={designation}
+                      onChange={setDesignation}
+                      placeholder="e.g. Assistant Professor"
+                      autoComplete="organization-title"
+                    />
+                  </motion.div>
+                )}
+
                 {/* Server-side error */}
                 {submitError && (
                   <motion.p
@@ -456,7 +538,7 @@ export function Auth() {
             </div>
           </motion.div>
         </motion.div>
-      </div>
+      </main>
     </div>
   )
 }

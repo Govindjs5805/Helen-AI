@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
+import { LogoutButton } from '@/components/LogoutButton'
 
 const NAV_ITEMS = {
   student: [
@@ -7,6 +9,8 @@ const NAV_ITEMS = {
     { href: '/ai-assistant', label: 'AI', icon: AssistantIcon },
     { href: '/documents', label: 'Docs', icon: DocumentsIcon },
     { href: '/notes', label: 'Notes', icon: NotesIcon },
+    { href: '/planner', label: 'Plan', icon: NotesIcon },
+    { href: '/focus', label: 'Focus', icon: ProgressIcon },
     { href: '/progress', label: 'More', icon: ProgressIcon },
   ],
   teacher: [
@@ -150,6 +154,7 @@ function OverflowIcon({ className }: { className?: string }) {
 export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
   const { profile } = useAuth()
   const location = useLocation()
+  const [moreOpen, setMoreOpen] = useState(false)
   const role = profile?.role || 'student'
   const items = NAV_ITEMS[role as keyof typeof NAV_ITEMS] || NAV_ITEMS.student
 
@@ -160,12 +165,16 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
     location.pathname === i.href || (i.href === '/dashboard' && location.pathname === '/dashboard')
   )?.href
 
+  useEffect(() => {
+    setMoreOpen(false)
+  }, [location.pathname])
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-40 md:hidden"
       aria-label="Mobile navigation"
     >
-      <div className="mx-auto flex max-w-lg items-center justify-between gap-1 rounded-t-xl border-t border-black/10 bg-surface/95 px-2 pb-4 pt-2 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10">
+      <div className="mx-auto flex max-w-lg items-center justify-between gap-1 rounded-t-xl border-t border-black/10 bg-surface/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] backdrop-blur-md dark:border-white/10">
         {visible.map(item => {
           const isActive = activeHref === item.href
           return (
@@ -187,22 +196,26 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
         })}
 
         {overflow.length > 0 && (
-          <div className="relative group">
+          <div className="relative">
             <button
+              type="button"
+              onClick={() => setMoreOpen(open => !open)}
               className="flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-text/60 hover:text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               aria-label="More navigation items"
               aria-haspopup="true"
+              aria-expanded={moreOpen}
             >
               <OverflowIcon className="h-5 w-5" />
               <span className="text-[10px] font-medium">More</span>
             </button>
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 rounded-lg border border-black/10 bg-surface p-2 shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all dark:border-white/10">
+            {moreOpen && <div className="absolute bottom-full left-1/2 z-50 mb-2 max-h-[60dvh] w-48 -translate-x-1/2 overflow-y-auto rounded-xl border border-black/10 bg-surface p-2 shadow-lg dark:border-white/10">
               {overflow.map(item => {
                 const isActive = activeHref === item.href
                 return (
                   <Link
                     key={item.href}
                     to={item.href}
+                    onClick={() => setMoreOpen(false)}
                     className={`block rounded-md px-3 py-2 text-sm ${
                       isActive
                         ? 'bg-primary/10 text-primary'
@@ -214,13 +227,13 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
                   </Link>
                 )
               })}
-            </div>
+            </div>}
           </div>
         )}
+        <div className="flex-1">
+          <LogoutButton compact />
+        </div>
       </div>
-
-      {/* Safe-area bottom padding for iOS */}
-      <div className="h-[env(safe-area-inset-bottom)] bg-background" />
     </nav>
   )
 }

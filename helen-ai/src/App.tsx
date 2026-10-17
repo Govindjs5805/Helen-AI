@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { OnboardingGuard } from '@/components/OnboardingGuard'
 import { Auth } from '@/pages/Auth'
+import { AuthVerified } from '@/pages/AuthVerified'
 import { Onboarding } from '@/pages/Onboarding'
 import { Dashboard } from '@/pages/Dashboard'
 import { Dashboard as TeacherDashboard } from '@/pages/teacher/Dashboard'
@@ -43,6 +44,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/verified" element={<AuthVerified />} />
       <Route path="/dev/theme-preview" element={<ThemePreview />} />
       <Route path="/dev/document-simplifier" element={<DocumentSimplifierPreview />} />
       <Route path="/onboarding" element={<Onboarding />} />

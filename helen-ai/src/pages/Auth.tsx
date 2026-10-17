@@ -4,6 +4,7 @@ import { motion, type Variants } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { RoleSelector } from '@/components/RoleSelector'
+import { VerifyPending } from '@/components/VerifyPending'
 import type { AuthMode, UserRole } from '@/types'
 
 // ---------------------------------------------------------------------------
@@ -208,6 +209,7 @@ export function Auth() {
   // Submission state
   const [buttonState, setButtonState] = useState<ButtonState>('idle')
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null)
 
   // AuthGuard: if session + profile are both loaded, route based on role.
   // We don't redirect on initial mount (loading=true) — that would briefly show the
@@ -217,6 +219,19 @@ export function Auth() {
       return <Navigate to="/onboarding" replace />
     }
     return <Navigate to="/dashboard" replace />
+  }
+  if (pendingEmail) {
+    return (
+      <VerifyPending
+        email={pendingEmail}
+        password={password}
+        onBack={() => {
+          setPendingEmail(null)
+          setButtonState('idle')
+          setMode('login')
+        }}
+      />
+    )
   }
 
   function validateAll(): boolean {
@@ -238,7 +253,7 @@ export function Auth() {
     return !e && !p && !n && !teacherError
   }
 
-  async function handleSubmit(e: FormEvent) {
+    async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setSubmitError(null)
 
@@ -253,19 +268,23 @@ export function Auth() {
     if (mode === 'login') {
       const { error } = await login(email, password)
       if (error) {
+        // Unverified account: show the "verify your email" page instead of an error
+        if (error.includes('Email not confirmed')) {
+          setButtonState('idle')
+          setPendingEmail(email)
+          return
+        }
         setButtonState('error')
         const msg =
           error.toLowerCase().includes('invalid login credentials')
             ? 'Wrong email or password. Try again.'
-            : error.includes('Email not confirmed')
-            ? 'Check your inbox — we sent a confirmation link.'
             : error
         setSubmitError(msg)
         setTimeout(() => setButtonState('idle'), 1500)
         return
       }
     } else {
-      const { error } = await register(email, password, fullName, role, role === 'teacher'
+      const { error, needsVerification } = await register(email, password, fullName, role, role === 'teacher'
         ? { instituteName: instituteName.trim(), place: place.trim(), designation: designation.trim() }
         : undefined)
       if (error) {
@@ -274,11 +293,16 @@ export function Auth() {
           error.toLowerCase().includes('already registered') ||
           error.toLowerCase().includes('already exists')
             ? "That email's already registered. Try signing in."
-            : error.includes('Email not confirmed')
-            ? 'Check your inbox — we sent a confirmation link.'
             : error
         setSubmitError(msg)
         setTimeout(() => setButtonState('idle'), 1500)
+        return
+      }
+
+      // Email confirmation required: show the "verifying your email" page
+      if (needsVerification) {
+        setButtonState('idle')
+        setPendingEmail(email)
         return
       }
     }

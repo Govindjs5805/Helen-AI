@@ -31,7 +31,7 @@ interface AuthContextType {
     fullName: string,
     role: UserRole,
     teacherDetails?: TeacherRegistrationDetails
-  ) => Promise<{ error: string | null }>
+  ) => Promise<{ error: string | null; needsVerification?: boolean }>
   logout: () => Promise<{ error: string | null }>
   refreshProfile: () => Promise<void>
 }
@@ -180,7 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchProfile]
   )
 
-  const register = useCallback(
+    const register = useCallback(
     async (
       email: string,
       password: string,
@@ -193,6 +193,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/auth/verified`,
             data: {
               full_name: fullName,
               role,
@@ -211,6 +212,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: signUpError.message }
       }
 
+      // Supabase returns a fake user (no identities) for an already-registered email
+      if (data.user && data.user.identities?.length === 0) {
+        return { error: 'That email is already registered. Try signing in.' }
+      }
+
       // If the user was created, the database trigger will insert the profile.
       // Fetch it (or fall back to user_metadata) so we have a role to route by.
       if (data.session) {
@@ -225,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } as unknown as import('@supabase/supabase-js').Session))
       }
 
-      return { error: null }
+      return { error: null, needsVerification: !data.session }
     },
     [fetchProfile]
   )

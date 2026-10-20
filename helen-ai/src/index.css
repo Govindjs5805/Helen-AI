@@ -9,6 +9,22 @@
   --font-sans: 'Inter', system-ui, sans-serif;
   --font-heading: 'Sora', serif;
   --font-dyslexia: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
+  --font-display: var(--adhd-font-display);
+  --font-adhd-body: var(--adhd-font-body);
+  --font-adhd-display: var(--adhd-font-display);
+  --color-adhd-navy: var(--adhd-navy);
+  --color-adhd-lime: var(--adhd-lime);
+  --color-adhd-pink: var(--adhd-pink);
+  --color-adhd-periwinkle: var(--adhd-periwinkle);
+  --color-adhd-mint: var(--adhd-mint);
+  --color-adhd-ink: var(--adhd-ink);
+  --color-adhd-screen: var(--adhd-screen);
+  --color-adhd-surface: var(--adhd-surface);
+  --color-adhd-copy: var(--adhd-copy);
+  --color-adhd-future: var(--adhd-future);
+  --color-adhd-outline: var(--adhd-outline);
+  --radius-adhd-card: var(--adhd-card-radius);
+  --radius-adhd-screen: var(--adhd-screen-radius);
 }
 
 /* ---------------------------------------------------------------------------
@@ -35,7 +51,117 @@
   --reading-max-line-width: 62ch;
   --reading-background: #fff8e8;
   --reading-text: #3b3b3b;
+  --adhd-navy: #1E2F9E;
+  --adhd-lime: #C8F169;
+  --adhd-pink: #F28BDD;
+  --adhd-periwinkle: #8FA2F0;
+  --adhd-mint: #B9F2DC;
+  --adhd-ink: #0B1020;
+  --adhd-font-display: 'Fredoka', system-ui, sans-serif;
+  --adhd-font-body: 'Lexend', system-ui, sans-serif;
+  --adhd-card-radius: 28px;
+  --adhd-screen-radius: 32px;
+  --adhd-screen: #FFFFFF;
+  --adhd-surface: #FFFFFF;
+  --adhd-copy: #0B1020;
+  --adhd-future: #E9EAF0;
+  --adhd-outline: #CBD0E0;
   font-size: calc(16px * var(--font-size-multiplier));
+}
+
+:root[data-theme="adhd"][data-mode="dark"] {
+  --adhd-screen: #1E2F9E;
+  --adhd-surface: #26378F;
+  --adhd-copy: #FFFFFF;
+  --adhd-future: #DFE3F3;
+  --adhd-outline: #A8B5F2;
+  --color-background: #1E2F9E;
+  --color-surface: #26378F;
+  --color-text: #FFFFFF;
+  --color-primary: #C8F169;
+  --color-accent: #C8F169;
+}
+
+:root[data-theme="adhd"][data-mode="light"] {
+  --adhd-screen: #FFFFFF;
+  --adhd-surface: #FFFFFF;
+  --adhd-copy: #0B1020;
+  --adhd-future: #E9EAF0;
+  --adhd-outline: #CBD0E0;
+  --color-background: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-text: #0B1020;
+  --color-primary: #1E2F9E;
+  --color-accent: #C8F169;
+}
+
+:root[data-theme="adhd"] body {
+  font-family: var(--adhd-font-body);
+}
+
+:root[data-theme="adhd"] h1,
+:root[data-theme="adhd"] h2,
+:root[data-theme="adhd"] h3,
+:root[data-theme="adhd"] h4,
+:root[data-theme="adhd"] h5,
+:root[data-theme="adhd"] h6 {
+  font-family: var(--adhd-font-display);
+}
+
+.adhd-preview-swap {
+  animation: adhd-preview-fade 180ms ease-out;
+}
+
+@keyframes adhd-preview-fade {
+  from { opacity: 0.55; }
+  to { opacity: 1; }
+}
+
+.adhd-task-card {
+  border-radius: var(--adhd-card-radius);
+  box-shadow: 0 8px 24px rgb(11 16 32 / 8%);
+}
+
+.adhd-task-card-current {
+  position: relative;
+  z-index: 1;
+}
+
+.adhd-task-card-current > button {
+  min-height: 128px;
+}
+
+.adhd-floating-nav {
+  box-shadow: 0 12px 32px rgb(11 16 32 / 18%);
+}
+
+.adhd-date-strip {
+  scrollbar-width: thin;
+}
+
+:root[data-calm-mode="true"] .adhd-home .adhd-task-card {
+  background-color: var(--adhd-lime);
+}
+
+:root[data-calm-mode="true"] .adhd-home .adhd-task-card button > span[aria-hidden="true"] {
+  display: none;
+}
+
+:root[data-calm-mode="true"] .adhd-home .adhd-floating-nav > a:last-child {
+  background-color: var(--adhd-lime);
+}
+
+:root[data-calm-mode="true"] .adhd-home svg,
+:root[data-calm-mode="true"] .adhd-welcome-decoration {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adhd-preview-swap,
+  .adhd-welcome-decoration {
+    animation: none;
+    transition: none;
+  }
 }
 
 :root.dark {

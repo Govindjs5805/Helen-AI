@@ -94,17 +94,26 @@ export const THEME_PRESETS: Record<ThemePresetName, ThemePreset> = {
   },
   adhd: {
     colors: {
-      ...BASE_TOKENS.light,
-      background: '#F5F9F6',
+      background: '#FFFFFF',
+      surface: '#FFFFFF',
+      text: '#0B1020',
+      primary: '#1E2F9E',
+      accent: '#C8F169',
     },
-    darkColors: BASE_TOKENS.dark,
+    darkColors: {
+      background: '#1E2F9E',
+      surface: '#26378F',
+      text: '#FFFFFF',
+      primary: '#C8F169',
+      accent: '#C8F169',
+    },
     font: {
-      family: DEFAULT_FONT,
+      family: "'Lexend', system-ui, sans-serif",
       sizeMultiplier: 1,
       letterSpacing: '0em',
       lineHeight: '1.5',
     },
-    layout: layoutFlags({ reducedMotion: true, singleFocusLayout: true }),
+    layout: layoutFlags({ singleFocusLayout: true }),
   },
   visual_impairment: {
     colors: {

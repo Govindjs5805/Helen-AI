@@ -20,6 +20,9 @@ import {
 interface ThemeContextType {
   theme: 'light' | 'dark'
   toggleTheme: () => void
+  calmMode: boolean
+  setCalmMode: (enabled: boolean) => void
+  themeSaveError: string
   activeDisabilityPreset: ThemePresetName | null
   themeTokens: ThemeTokens
   themeSlug: string
@@ -45,8 +48,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return 'light'
   })
 
-  const [activeDisabilityPreset, setActiveDisabilityPreset] =
-    useState<DisabilityPreset>(null)
+  const [activeDisabilityPreset, setActiveDisabilityPresetState] =
+    useState<DisabilityPreset>(() => {
+      if (typeof window === 'undefined') return null
+      return getPresetName(localStorage.getItem('accessibility-theme') as AccessibilityNeedType | null)
+    })
+  const [calmMode, setCalmModeState] = useState(() =>
+    typeof window !== 'undefined' && localStorage.getItem('adhd-calm-mode') === 'true'
+  )
+  const [themeSaveError, setThemeSaveError] = useState('')
   const [themeTokens, setThemeTokens] = useState<ThemeTokens>(() =>
     getThemeTokens(null, theme)
   )
@@ -93,6 +103,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       const primaryNeed = (needs?.[0]?.need_type ?? null) as AccessibilityNeedType | null
       setActiveDisabilityPreset(getPresetName(primaryNeed))
+
+      if (profile.role === 'student') {
+        const { data: preferences, error: preferencesError } = await supabase
+          .from('student_profiles')
+          .select('theme_mode, calm_mode')
+          .eq('id', session.user.id)
+          .maybeSingle()
+
+        if (!isMounted || request !== currentRequest) return
+        if (preferencesError) {
+          console.error('Failed to load accessibility theme preferences', preferencesError)
+        } else if (preferences) {
+          if (preferences.theme_mode === 'light' || preferences.theme_mode === 'dark') {
+            setTheme(preferences.theme_mode)
+          }
+          if (typeof preferences.calm_mode === 'boolean') {
+            setCalmModeState(preferences.calm_mode)
+          }
+        }
+      }
     }
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -116,6 +146,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme])
 
   useEffect(() => {
+    localStorage.setItem('adhd-calm-mode', String(calmMode))
+  }, [calmMode])
+
+  const setActiveDisabilityPreset = useCallback((preset: DisabilityPreset) => {
+    setActiveDisabilityPresetState(preset)
+    localStorage.setItem('accessibility-theme', preset ?? 'default')
+  }, [])
+
+  useEffect(() => {
     const tokens = getThemeTokens(activeDisabilityPreset, theme)
     const slug = getThemeSlug(activeDisabilityPreset)
     setThemeTokens(tokens)
@@ -125,14 +164,22 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       const root = document.documentElement
       root.setAttribute('data-profile', slug)
-      root.setAttribute('data-theme', theme)
+      root.setAttribute('data-theme', activeDisabilityPreset === 'adhd' ? 'adhd' : theme)
+      root.setAttribute('data-mode', theme)
+      root.setAttribute('data-calm-mode', String(calmMode))
 
       Object.entries(tokens.colors).forEach(([key, value]) => {
         root.style.setProperty(`--color-${key}`, value)
       })
 
-      root.style.setProperty('--font-family', tokens.font.family)
-      root.style.setProperty('--font-heading', tokens.font.family)
+      root.style.setProperty(
+        '--font-family',
+        activeDisabilityPreset === 'adhd' ? "'Lexend', system-ui, sans-serif" : tokens.font.family
+      )
+      root.style.setProperty(
+        '--font-heading',
+        activeDisabilityPreset === 'adhd' ? "'Fredoka', system-ui, sans-serif" : tokens.font.family
+      )
       root.style.setProperty('--font-size-multiplier', tokens.font.sizeMultiplier.toString())
       root.style.setProperty('--font-letter-spacing', tokens.font.letterSpacing)
       root.style.setProperty('--font-line-height', tokens.font.lineHeight)
@@ -146,10 +193,46 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.classList.remove('light', 'dark')
       root.classList.add(theme)
     }
-  }, [theme, activeDisabilityPreset])
+  }, [theme, activeDisabilityPreset, calmMode])
 
   const toggleTheme = useCallback(() => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
+    const next = theme === 'light' ? 'dark' : 'light'
+    setTheme(next)
+    setThemeSaveError('')
+    void supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return
+      const { error } = await supabase
+        .from('student_profiles')
+        .update({ theme_mode: next })
+        .eq('id', session.user.id)
+      if (error) {
+        console.error('Failed to save accessibility theme preference', error)
+        setThemeSaveError('Your theme changed, but could not be saved to your profile.')
+      }
+    }).catch((error: unknown) => {
+      console.error('Failed to save accessibility theme preference', error)
+      setThemeSaveError('Your theme changed, but could not be saved to your profile.')
+    })
+  }, [theme])
+
+  const setCalmMode = useCallback((enabled: boolean) => {
+    setCalmModeState(enabled)
+    setThemeSaveError('')
+    localStorage.setItem('adhd-calm-mode', String(enabled))
+    void supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session?.user) return
+      const { error } = await supabase
+        .from('student_profiles')
+        .update({ calm_mode: enabled })
+        .eq('id', session.user.id)
+      if (error) {
+        console.error('Failed to save calm mode preference', error)
+        setThemeSaveError('Calm mode changed, but could not be saved to your profile.')
+      }
+    }).catch((error: unknown) => {
+      console.error('Failed to save calm mode preference', error)
+      setThemeSaveError('Calm mode changed, but could not be saved to your profile.')
+    })
   }, [])
 
   return (
@@ -157,6 +240,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       value={{
         theme,
         toggleTheme,
+        calmMode,
+        setCalmMode,
+        themeSaveError,
         activeDisabilityPreset,
         themeTokens,
         themeSlug,

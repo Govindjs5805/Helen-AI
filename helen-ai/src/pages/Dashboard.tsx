@@ -9,6 +9,7 @@ import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { attentionRequest } from '@/services/attentionApi'
 import type { StudentProfile } from '@/types'
 import { AdminAttentionMetrics, ParentAttentionView } from '@/components/AttentionSharingViews'
+import { AdhdHome } from '@/components/adhd/AdhdHome'
 
 /** Greeting header with time awareness */
 function GreetingHeader({ name }: { name: string }) {
@@ -365,6 +366,10 @@ export function Dashboard() {
 
   if (!session) {
     return <Navigate to="/auth" replace />
+  }
+
+  if (profile?.role === 'student' && activeDisabilityPreset === 'adhd') {
+    return <AdhdHome firstName={profile.full_name?.split(' ')[0] ?? 'there'} />
   }
 
   // Non-student role placeholders

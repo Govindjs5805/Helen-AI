@@ -99,6 +99,8 @@ export interface StudentProfile {
   reading_preferences?: ReadingPreferences
   attention_preferences?: AttentionPreferences
   attention_sharing_consent?: boolean
+  theme_mode?: Theme
+  calm_mode?: boolean
   created_at: string
 }
 

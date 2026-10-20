@@ -4,13 +4,17 @@ import { Sidebar } from './Sidebar'
 import { MobileBottomNav } from './MobileBottomNav'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { QuickThoughtCapture } from '@/components/QuickThoughtCapture'
+import { useTheme } from '@/context/ThemeContext'
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(() =>
     window.matchMedia('(min-width: 768px)').matches
   )
-  const focusMode = useLocation().pathname === '/focus'
+  const location = useLocation()
+  const focusMode = location.pathname === '/focus'
   const { adhdEnabled } = useReadingTheme()
+  const { activeDisabilityPreset } = useTheme()
+  const adhdDashboard = activeDisabilityPreset === 'adhd' && location.pathname === '/dashboard'
 
   const toggleSidebar = () => setIsSidebarOpen(prev => !prev)
 
@@ -26,10 +30,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh w-full overflow-x-clip bg-background text-text">
-      {!focusMode && <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />}
+      {!focusMode && !adhdDashboard && <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />}
 
       {/* Overlay for mobile when sidebar is open */}
-      {!focusMode && isSidebarOpen && (
+      {!focusMode && !adhdDashboard && isSidebarOpen && (
         <div
           className="fixed inset-0 z-30 bg-black/30 md:hidden"
           onClick={toggleSidebar}
@@ -45,8 +49,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {/* Mobile bottom tab bar */}
-      {!focusMode && <MobileBottomNav maxVisible={4} />}
-      {!focusMode && adhdEnabled && <QuickThoughtCapture />}
+      {!focusMode && !adhdDashboard && <MobileBottomNav maxVisible={4} />}
+      {!focusMode && !adhdDashboard && adhdEnabled && <QuickThoughtCapture />}
     </div>
   )
 }

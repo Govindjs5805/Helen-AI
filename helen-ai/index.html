@@ -19,6 +19,11 @@
         const theme = localStorage.getItem('theme') || 
           (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.classList.add(theme);
+        document.documentElement.setAttribute('data-mode', theme);
+        document.documentElement.setAttribute(
+          'data-theme',
+          localStorage.getItem('accessibility-theme') === 'adhd' ? 'adhd' : theme
+        );
       })();
     </script>
   </head>

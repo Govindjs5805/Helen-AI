@@ -16,6 +16,7 @@ import {
 } from '@/context/ReadingThemeContext'
 import { ReadingProfileEditor } from '@/components/ReadingProfileEditor'
 import { AttentionProfileEditor } from '@/components/AttentionProfileEditor'
+import { AdhdWelcome } from '@/components/adhd/AdhdWelcome'
 import type {
   OnboardingSubmitData,
   AccessibilityNeedType,
@@ -80,6 +81,8 @@ export function Onboarding() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitSuccess, setSubmitSuccess] = useState(false)
+  const [showAdhdWelcome, setShowAdhdWelcome] = useState(false)
+  const { theme, calmMode, setActiveDisabilityPreset } = useTheme()
 
   // ── Validation ───────────────────────────────────────────────────────────
   const [step1Errors, setStep1Errors] = useState<Record<string, string>>({})
@@ -98,6 +101,11 @@ export function Onboarding() {
     'Review',
   ]
   const totalSteps = stepLabels.length
+
+  useEffect(() => {
+    if (primaryNeed) setActiveDisabilityPreset(getPresetName(primaryNeed))
+    else if (step >= 2 && selectedNeeds.size === 0) setActiveDisabilityPreset(null)
+  }, [primaryNeed, selectedNeeds.size, setActiveDisabilityPreset, step])
 
   // ── ALL hooks must be declared before any early return ─────────────────────
 
@@ -119,6 +127,7 @@ export function Onboarding() {
 
   useEffect(() => {
     if (!submitSuccess) return
+    if (primaryNeed === 'adhd') return
     const timer = setTimeout(() => {
       window.location.href = '/dashboard'
     }, 2000)
@@ -175,20 +184,21 @@ export function Onboarding() {
     setStep(s => Math.max(s - 1, 1))
   }
 
+  function choosePrimaryNeed(need: AccessibilityNeedType) {
+    setPrimaryNeed(need)
+    if (need === 'adhd') setShowAdhdWelcome(true)
+  }
+
   function toggleNeed(need: AccessibilityNeedType) {
-    setSelectedNeeds(prev => {
-      const next = new Set(prev)
-      if (next.has(need)) {
-        next.delete(need)
-        // If we're removing the primary need, clear it.
-        if (primaryNeed === need) setPrimaryNeed(null)
-      } else {
-        next.add(need)
-        // Auto-set as primary if it's the first selection.
-        if (next.size === 1) setPrimaryNeed(need)
-      }
-      return next
-    })
+    const next = new Set(selectedNeeds)
+    if (next.has(need)) {
+      next.delete(need)
+      if (primaryNeed === need) setPrimaryNeed(null)
+    } else {
+      next.add(need)
+      if (next.size === 1) choosePrimaryNeed(need)
+    }
+    setSelectedNeeds(next)
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -237,6 +247,8 @@ export function Onboarding() {
           onboarding_completed: true,
           reading_preferences: profilePayload.student_profile.reading_preferences,
           attention_preferences: profilePayload.student_profile.attention_preferences,
+          theme_mode: theme,
+          calm_mode: calmMode,
         },
         { onConflict: 'id' }
       )
@@ -290,7 +302,9 @@ export function Onboarding() {
   // Slide animation between steps.
   const slideDirection = step > 1 ? 1 : -1
 
-  return (
+  return showAdhdWelcome ? (
+    <AdhdWelcome onGetStarted={() => setShowAdhdWelcome(false)} />
+  ) : (
     <OnboardingLayout
       currentStep={step}
       totalSteps={totalSteps}
@@ -333,7 +347,7 @@ export function Onboarding() {
                   selectedNeeds={selectedNeeds}
                   toggleNeed={toggleNeed}
                   primaryNeed={primaryNeed}
-                  setPrimaryNeed={setPrimaryNeed}
+                  setPrimaryNeed={choosePrimaryNeed}
                   otherDescription={otherDescription}
                   setOtherDescription={setOtherDescription}
                   onNext={handleNext}
@@ -750,10 +764,8 @@ function Step2({
 
       {/* Live theme preview — shows what the UI will look like with this primary need */}
       {primaryNeed && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
+        <div
+          key={primaryNeed}
           className="space-y-3 rounded-xl border border-black/10 bg-surface p-5 dark:border-white/10"
         >
           <h3 className="font-heading text-sm font-semibold text-text">
@@ -765,11 +777,11 @@ function Step2({
 
           {/* Miniature sample card using the target palette */}
           <div
-            className="rounded-lg p-4"
+            className={primaryNeed === 'adhd' ? 'adhd-preview-swap rounded-lg p-4' : 'rounded-lg p-4'}
             style={{
               backgroundColor: previewTokens?.colors.background,
               color: previewTokens?.colors.text,
-              fontFamily: previewTokens?.font.family,
+              fontFamily: primaryNeed === 'adhd' ? "'Lexend', sans-serif" : previewTokens?.font.family,
               fontSize: `calc(16px * ${previewTokens?.font.sizeMultiplier ?? 1})`,
               letterSpacing: previewTokens?.font.letterSpacing,
               lineHeight: previewTokens?.font.lineHeight,
@@ -779,7 +791,7 @@ function Step2({
               className="font-heading font-bold text-lg mb-2"
               style={{
                 color: previewTokens?.colors.text,
-                fontFamily: previewTokens?.font.family,
+                fontFamily: primaryNeed === 'adhd' ? "'Fredoka', sans-serif" : previewTokens?.font.family,
               }}
             >
               Sample Heading
@@ -795,7 +807,7 @@ function Step2({
               Sample Button
             </button>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Navigation */}

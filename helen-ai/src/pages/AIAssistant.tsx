@@ -164,7 +164,7 @@ export function AIAssistant() {
         {messages.length === 0 ? (
           <div className="my-auto flex flex-col items-center justify-center space-y-6 text-center">
             {/* Cute 3D Helen Mascot with glowing aura */}
-            <HelenMascot mood="happy" className="h-44 w-36" waving={true} />
+            <HelenMascot mood="happy" className="h-48 w-44" waving={true} />
 
             <div className="space-y-1.5">
               <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">

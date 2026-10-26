@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Timer } from 'lucide-react'
+import { ChartNoAxesCombined, Timer } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { attentionRequest } from '@/services/attentionApi'
@@ -10,18 +10,18 @@ import { DateStrip } from './DateStrip'
 import { HelenMascot } from './HelenMascot'
 import { TaskCard, type FocusTask } from './TaskCard'
 
-const TASKS: FocusTask[] = [
-  { title: 'Study Math', duration: 25, color: 'lime', label: 'Now' },
-  { title: 'Take a break', duration: 5, color: 'pink' },
-  { title: 'Revise notes', duration: 15, color: 'periwinkle' },
-]
-
 interface TodaySummary {
   tasksDone: number
   minutesFocused: number
 }
 
 interface PlannerItem {
+  id: string
+  title: string
+  estimated_minutes: number
+  priority: number
+  position: number
+  due_date: string
   status: 'todo' | 'done'
 }
 
@@ -43,6 +43,8 @@ export function AdhdHome({ firstName }: { firstName: string }) {
     return hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
   })
   const [summary, setSummary] = useState<TodaySummary | null>(null)
+  const [plannerItems, setPlannerItems] = useState<PlannerItem[]>([])
+  const [selectedDate, setSelectedDate] = useState(() => new Date())
   const [summaryLoading, setSummaryLoading] = useState(true)
   const [summaryError, setSummaryError] = useState('')
 
@@ -56,8 +58,7 @@ export function AdhdHome({ firstName }: { firstName: string }) {
     }
 
     let active = true
-    const today = new Date()
-    const dateKey = localDateKey(today)
+    const dateKey = localDateKey(selectedDate)
     setSummaryLoading(true)
 
     void Promise.all([
@@ -65,10 +66,11 @@ export function AdhdHome({ firstName }: { firstName: string }) {
       attentionRequest<{ sessions: FocusSession[] }>('/attention/focus-sessions?limit=100', token),
     ]).then(([planner, focus]) => {
       if (!active) return
-      const todaysSessions = focus.sessions.filter(item => new Date(item.started_at).toDateString() === today.toDateString())
+      setPlannerItems(planner.items)
+      const selectedSessions = focus.sessions.filter(item => new Date(item.started_at).toDateString() === selectedDate.toDateString())
       setSummary({
         tasksDone: planner.items.filter(item => item.status === 'done').length,
-        minutesFocused: todaysSessions
+        minutesFocused: selectedSessions
           .filter(item => item.status === 'completed')
           .reduce((total, item) => total + (item.focus_minutes ?? 0), 0),
       })
@@ -83,7 +85,31 @@ export function AdhdHome({ firstName }: { firstName: string }) {
     })
 
     return () => { active = false }
-  }, [session?.access_token])
+  }, [session?.access_token, selectedDate])
+
+  async function setPlannerItemStatus(item: PlannerItem, status: PlannerItem['status']) {
+    const token = session?.access_token
+    if (!token || item.status === status) return
+    setPlannerItems(items => items.map(candidate => candidate.id === item.id ? { ...candidate, status } : candidate))
+    setSummaryError('')
+    try {
+      const result = await attentionRequest<{ item: PlannerItem }>(`/attention/planner/${item.id}`, token, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      })
+      setPlannerItems(items => items.map(candidate => candidate.id === item.id ? result.item : candidate))
+      setSummary(current => current
+        ? { ...current, tasksDone: current.tasksDone + (status === 'done' ? 1 : -1) }
+        : current)
+    } catch (caught) {
+      setPlannerItems(items => items.map(candidate => candidate.id === item.id ? item : candidate))
+      setSummaryError(caught instanceof Error ? caught.message : 'Your task could not be updated.')
+    }
+  }
+
+  const orderedTasks = [...plannerItems].sort((first, second) =>
+    Number(first.status === 'done') - Number(second.status === 'done') || first.position - second.position
+  )
 
   return (
     <div className="adhd-home mx-auto w-full max-w-[1280px] space-y-7 text-text">
@@ -103,7 +129,7 @@ export function AdhdHome({ firstName }: { firstName: string }) {
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(13rem,1fr)] lg:gap-10">
         <div className="min-w-0 space-y-7">
           <section aria-label="Dates this week">
-            <DateStrip />
+            <DateStrip onDateChange={setSelectedDate} />
           </section>
 
           <section aria-labelledby="today-plan-title">
@@ -111,13 +137,37 @@ export function AdhdHome({ firstName }: { firstName: string }) {
               <h2 id="today-plan-title" className="font-display font-semibold">Your next steps</h2>
               {!calmMode && <HelenMascot mood="focus" className="h-14 w-12 shrink-0 text-primary" />}
             </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {TASKS.map((task, index) => (
-                <div key={task.title} className={index === 0 ? 'md:col-span-2' : undefined}>
-                  <TaskCard task={task} calmMode={calmMode} />
-                </div>
-              ))}
-            </div>
+            {orderedTasks.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {orderedTasks.map((item, index) => {
+                  const task: FocusTask = {
+                    title: item.title,
+                    duration: item.estimated_minutes,
+                    color: (['lime', 'pink', 'periwinkle'] as const)[index % 3],
+                    label: index === 0 && item.status !== 'done' ? 'Now' : undefined,
+                  }
+                  return (
+                    <div key={item.id} className={index === 0 ? 'md:col-span-2' : undefined}>
+                      <TaskCard
+                        task={task}
+                        calmMode={calmMode}
+                        completed={item.status === 'done'}
+                        onToggleComplete={() => void setPlannerItemStatus(item, item.status === 'done' ? 'todo' : 'done')}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            ) : summaryLoading ? (
+              <p role="status" className="text-sm text-muted">Loading today’s tasks…</p>
+            ) : (
+              <div className="rounded-2xl border border-dashed border-text/30 bg-surface p-5">
+                <p className="font-semibold">No tasks planned for today yet.</p>
+                <Link to="/planner" className="mt-3 inline-flex min-h-11 items-center rounded-md border border-primary px-4 py-2 font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                  Add a task to your plan
+                </Link>
+              </div>
+            )}
           </section>
         </div>
 
@@ -139,22 +189,26 @@ export function AdhdHome({ firstName }: { firstName: string }) {
               Start focus session
             </Link>
             <div className="mt-4 flex items-center justify-between gap-3 border-t border-text/15 pt-3">
-              <span className="text-sm font-medium">Calm mode</span>
+              <span id="calm-mode-label" className="text-sm font-medium">Calm mode</span>
               <button
                 type="button"
                 role="switch"
                 aria-checked={calmMode}
-                aria-label="Calm mode"
+                aria-labelledby="calm-mode-label"
                 onClick={() => setCalmMode(!calmMode)}
-                className={`relative flex min-h-11 min-w-11 items-center justify-center rounded-full border border-text/25 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${calmMode ? 'bg-primary' : 'bg-surface-2'}`}
+                className={`relative flex min-h-11 w-16 shrink-0 items-center rounded-full border border-text/25 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${calmMode ? 'justify-end bg-primary' : 'justify-start bg-surface-2'}`}
               >
-                <span className={`block h-7 w-7 rounded-full ${calmMode ? 'translate-x-1 bg-background' : '-translate-x-1 bg-muted'} transition-transform`} />
+                <span className="block h-8 w-8 rounded-full border border-text/20 bg-background shadow-sm" />
               </button>
             </div>
           </section>
 
           <section className="rounded-2xl border border-text/15 bg-surface p-5 sm:p-6" aria-labelledby="today-summary-title">
-            <h2 id="today-summary-title" className="font-display font-semibold">Today</h2>
+            <h2 id="today-summary-title" className="font-display font-semibold">
+              {selectedDate.toDateString() === new Date().toDateString()
+                ? 'Today'
+                : selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
+            </h2>
             {summaryLoading ? (
               <p role="status" className="mt-3 text-sm text-muted">Loading today’s summary…</p>
             ) : summaryError ? (
@@ -171,6 +225,14 @@ export function AdhdHome({ firstName }: { firstName: string }) {
                 </div>
               </dl>
             )}
+            {summary && summaryError && <p role="alert" className="mt-3 text-sm text-muted">{summaryError}</p>}
+            <Link
+              to="/progress"
+              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              <ChartNoAxesCombined className="h-4 w-4" aria-hidden="true" />
+              View progress
+            </Link>
           </section>
 
           <ParkedThoughtReview compact />

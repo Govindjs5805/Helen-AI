@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useFocusTimer } from '@/hooks/useFocusTimer'
@@ -7,14 +7,19 @@ import { useFocusTimer } from '@/hooks/useFocusTimer'
 export function FocusMode() {
   const { session } = useAuth()
   const { attentionPreferences } = useReadingTheme()
+  const [searchParams] = useSearchParams()
   const { timer, remainingSeconds, error, start, pause, resume, finish, startBreak, logEvent } =
     useFocusTimer(session?.user.id, session?.access_token)
-  const [taskLabel, setTaskLabel] = useState('')
+  const [taskLabel, setTaskLabel] = useState(() => searchParams.get('task') ?? '')
   const [welcomeBack, setWelcomeBack] = useState(false)
   const [notice, setNotice] = useState('')
   const [showBreak, setShowBreak] = useState(false)
   const finishingRef = useRef(false)
   const hiddenAt = useRef<number | null>(null)
+
+  useEffect(() => {
+    if (timer.mode === 'idle') setTaskLabel(searchParams.get('task') ?? '')
+  }, [searchParams, timer.mode])
 
   useEffect(() => {
     function onVisibilityChange() {

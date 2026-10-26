@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
@@ -39,12 +39,19 @@ export function Notes() {
   const [sourceText, setSourceText] = useState(() => typeof window === 'undefined' ? '' : sessionStorage.getItem('helen-ai:pending-quiz-source') ?? '')
   const [questionCount, setQuestionCount] = useState(5)
   const [quiz, setQuiz] = useState<GeneratedQuiz | null>(null)
+  const [subjects, setSubjects] = useState<string[]>([])
+  const [selectedSubject, setSelectedSubject] = useState('')
   const [answers, setAnswers] = useState<Record<number, number>>({})
   const [submitted, setSubmitted] = useState(false)
   const [activeQuestion, setActiveQuestion] = useState(0)
   const [revealedQuestions, setRevealedQuestions] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [quizSaveError, setQuizSaveError] = useState('')
+  const [quizSaveStatus, setQuizSaveStatus] = useState('')
+  const [quizSaving, setQuizSaving] = useState(false)
+  const savedAttempt = useRef(false)
+  const attemptSaveInProgress = useRef(false)
   const [voiceError, setVoiceError] = useState('')
   const [activeTab, setActiveTab] = useState<'notes' | 'quiz'>('quiz')
   const [noteId, setNoteId] = useState<string | null>(null)
@@ -55,6 +62,29 @@ export function Notes() {
   const [effortPoints, setEffortPoints] = useState(0)
   const [streak, setStreak] = useState(0)
   const [gamificationLoaded, setGamificationLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!session?.user.id) {
+      setSubjects([])
+      return
+    }
+    setSubjects([])
+    let cancelled = false
+    void supabase
+      .from('student_profiles')
+      .select('subjects')
+      .eq('id', session.user.id)
+      .maybeSingle()
+      .then(({ data, error: subjectError }) => {
+        if (cancelled) return
+        if (subjectError) {
+          setError('Your subjects could not be loaded. Quiz scores can still be saved without a subject.')
+          return
+        }
+        setSubjects(Array.isArray(data?.subjects) ? data.subjects : [])
+      })
+    return () => { cancelled = true }
+  }, [session?.user.id])
 
   useEffect(() => {
     setGamificationLoaded(false)
@@ -256,6 +286,9 @@ export function Notes() {
 
     setLoading(true)
     setError('')
+    setQuizSaveError('')
+    setQuizSaveStatus('')
+    savedAttempt.current = false
     setSubmitted(false)
     setQuiz(null)
     setAnswers({})
@@ -304,10 +337,42 @@ export function Notes() {
     }
   }
 
+  async function saveQuizAttempt(completedQuiz: GeneratedQuiz, finalScore: number) {
+    if (savedAttempt.current || attemptSaveInProgress.current) return
+    if (!session?.user.id) {
+      setQuizSaveError('Sign in again to save this quiz mark to Progress.')
+      return
+    }
+    attemptSaveInProgress.current = true
+    setQuizSaving(true)
+    setQuizSaveError('')
+    try {
+      const { error: saveError } = await supabase.from('quiz_attempts').insert({
+        student_id: session.user.id,
+        subject: selectedSubject || null,
+        topic: completedQuiz.topic,
+        score: finalScore,
+        total_questions: completedQuiz.questions.length,
+      })
+      if (saveError) {
+        setQuizSaveError('Your score is shown, but this quiz attempt could not be saved to Progress. Try saving it again.')
+        return
+      }
+      savedAttempt.current = true
+      setQuizSaveStatus('This quiz mark has been saved to Progress.')
+    } catch {
+      setQuizSaveError('Your score is shown, but this quiz attempt could not be saved to Progress. Try saving it again.')
+    } finally {
+      attemptSaveInProgress.current = false
+      setQuizSaving(false)
+    }
+  }
+
   function submitAnswers(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (quiz && Object.keys(answers).length === quiz.questions.length) {
       setSubmitted(true)
+      void saveQuizAttempt(quiz, score)
       if (adhdEnabled && attentionPreferences.gamification !== 'off') {
         setEffortPoints(points => points + quiz.questions.length)
         setStreak(value => value + 1)
@@ -318,6 +383,7 @@ export function Notes() {
   function finishShortRound() {
     if (!quiz || submitted || Object.keys(answers).length !== quiz.questions.length) return
     setSubmitted(true)
+    void saveQuizAttempt(quiz, score)
     if (adhdEnabled && attentionPreferences.gamification !== 'off') {
       setEffortPoints(points => points + quiz.questions.length)
       setStreak(value => value + 1)
@@ -402,6 +468,21 @@ export function Notes() {
         </div>
 
         <div className="space-y-1.5">
+          <label htmlFor="quiz-subject" className="text-sm font-semibold">Subject <span className="font-normal text-text/60">(optional)</span></label>
+          <select
+            id="quiz-subject"
+            value={selectedSubject}
+            onChange={event => setSelectedSubject(event.target.value)}
+            disabled={loading || Boolean(quiz && !submitted)}
+            className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:w-72"
+          >
+            <option value="">Choose a subject</option>
+            {subjects.map(subject => <option key={subject} value={subject}>{subject}</option>)}
+          </select>
+          {subjects.length === 0 && <p className="text-sm text-text/70">No subjects are listed in your learning profile yet.</p>}
+        </div>
+
+        <div className="space-y-1.5">
           <label htmlFor="quiz-source" className="text-sm font-semibold">
             Study material <span className="font-normal text-text/60">(optional)</span>
           </label>
@@ -437,10 +518,10 @@ export function Notes() {
         <button
           type="button"
           onClick={() => void generateQuiz()}
-          disabled={loading}
+          disabled={loading || quizSaving}
           className="min-h-12 w-full rounded-md bg-primary px-5 py-3 font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait disabled:opacity-60 sm:w-auto"
         >
-          {loading ? 'Creating your quiz…' : quiz ? 'Generate another quiz' : 'Generate my quiz'}
+          {loading ? 'Creating your quiz…' : quizSaving ? 'Saving your mark…' : quiz ? 'Generate another quiz' : 'Generate my quiz'}
         </button>
         {loading && <p role="status" aria-live="polite" className="text-sm text-text/70">Building clear, personalized questions…</p>}
       </form>
@@ -526,6 +607,18 @@ export function Notes() {
               <div role="status" aria-live="polite" className="rounded-xl border border-primary/25 bg-surface p-5">
                 <p className="font-heading text-xl font-bold">Your score: {score} out of {quiz.questions.length}</p>
                 <p className="mt-1 text-sm text-text/70">Review the explanations above, then generate another quiz whenever you’re ready.</p>
+                {quizSaveError ? (
+                  <div className="mt-3 space-y-2">
+                    <p role="alert" className="text-sm">{quizSaveError}</p>
+                    <button type="button" disabled={quizSaving} onClick={() => void saveQuizAttempt(quiz, score)} className="min-h-11 rounded-md border border-primary px-4 py-2 font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait">
+                      {quizSaving ? 'Saving mark…' : 'Save mark to Progress'}
+                    </button>
+                  </div>
+                ) : quizSaving ? (
+                  <p className="mt-3 text-sm text-text/70">Saving your mark to Progress…</p>
+                ) : quizSaveStatus ? (
+                  <p className="mt-3 text-sm font-medium text-primary">{quizSaveStatus}</p>
+                ) : null}
               </div>
             ) : adhdEnabled ? (
               <button

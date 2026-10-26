@@ -7,7 +7,7 @@ function startOfWeek(date: Date) {
   return result
 }
 
-export function DateStrip() {
+export function DateStrip({ onDateChange }: { onDateChange?: (date: Date) => void }) {
   const today = useMemo(() => new Date(), [])
   const [selected, setSelected] = useState(today.toDateString())
   const days = useMemo(() => {
@@ -33,7 +33,10 @@ export function DateStrip() {
               aria-label={`${date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}${todayDate ? ', today' : ''}`}
               aria-current={todayDate ? 'date' : undefined}
               aria-pressed={selectedDate}
-              onClick={() => setSelected(date.toDateString())}
+              onClick={() => {
+                setSelected(date.toDateString())
+                onDateChange?.(date)
+              }}
               className={[
                 'min-h-12 min-w-[4.5rem] rounded-full px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 todayDate

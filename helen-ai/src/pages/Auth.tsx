@@ -392,9 +392,11 @@ export function Auth() {
             className="pointer-events-none absolute bottom-16 left-12 h-28 w-28 rounded-[40%_60%_58%_42%] bg-[#C3D7FC]/15"
           />
           <motion.div variants={slideUpFade}>
-            <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C3D7FC] shadow-lg shadow-black/20">
-              <span className="font-heading text-xl font-bold leading-none text-[#030E50]">H</span>
-            </div>
+            <img
+              src={`${import.meta.env.BASE_URL}pwa-192x192.png`}
+              alt=""
+              className="mb-8 h-12 w-12 rounded-2xl object-cover shadow-lg shadow-black/20"
+            />
           </motion.div>
 
           <motion.h1

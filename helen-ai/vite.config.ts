@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'Helen AI',
         short_name: 'Helen',
         description: 'A personalized, accessible learning companion.',
-        theme_color: '#1B5E3F',
+        theme_color: '#FAFAF7',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '.',

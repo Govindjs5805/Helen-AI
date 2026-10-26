@@ -157,9 +157,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         {/* Header */}
         <div className="flex h-16 items-center justify-between border-b border-black/10 px-4 dark:border-white/10 md:justify-center md:px-2 md:group-hover/sidebar:px-4 lg:justify-center lg:px-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <span className="font-heading text-base font-bold text-white">H</span>
-            </div>
+            <img src={`${import.meta.env.BASE_URL}pwa-192x192.png`} alt="" className="h-9 w-9 rounded-lg object-cover" />
             <span className="hidden font-heading text-lg font-semibold text-text md:group-hover/sidebar:block lg:block">Helen AI</span>
           </div>
           <button

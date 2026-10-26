@@ -1,6 +1,6 @@
-import {defineConfig} from 'vite'
+import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import { fileURLToPath } from 'node:url'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
@@ -13,7 +13,7 @@ export default defineConfig({
         name: 'Helen AI',
         short_name: 'Helen',
         description: 'A personalized, accessible learning companion.',
-        theme_color: '#1B5E3F',
+        theme_color: '#FAFAF7',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '.',
@@ -39,6 +39,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globIgnores: ['**/yy.png'],
         runtimeCaching: [
           {
             urlPattern: ({ request }) =>
@@ -56,7 +57,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(String(import.meta.dirname), './src'),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   base: './',

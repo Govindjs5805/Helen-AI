@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { LogoutButton } from '@/components/LogoutButton'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { BookOpen, Timer } from 'lucide-react'
 
 const NAV_ITEMS = {
@@ -248,6 +249,10 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
                       </Link>
                     )
                   })}
+                  <div className="mt-2 flex items-center justify-between border-t border-slate-100 px-2 pt-2 dark:border-white/10">
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Theme</span>
+                    <ThemeToggle />
+                  </div>
                   <div className="mt-2 border-t border-slate-100 pt-2 dark:border-white/10">
                     <LogoutButton />
                   </div>

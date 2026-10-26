@@ -4,6 +4,7 @@ import { Timer } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { attentionRequest } from '@/services/attentionApi'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { DateStrip } from './DateStrip'
 import { TaskCard, type FocusTask } from './TaskCard'
 import { AdhdDecorations } from './AdhdDecorations'
@@ -35,7 +36,7 @@ function localDateKey(date: Date): string {
 
 export function AdhdHome({ firstName }: { firstName: string }) {
   const { session, profile } = useAuth()
-  const { calmMode, setCalmMode, themeSaveError } = useTheme()
+  const { theme, toggleTheme, calmMode, setCalmMode, themeSaveError } = useTheme()
   const [timeOfDay] = useState(() => {
     const hour = new Date().getHours()
     return hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
@@ -113,7 +114,7 @@ export function AdhdHome({ firstName }: { firstName: string }) {
   )
 
   return (
-    <div className="relative min-h-[calc(100dvh-5rem)] w-full overflow-hidden text-slate-900 transition-colors duration-200 dark:text-white">
+    <div className="relative min-h-[calc(100dvh-5rem)] w-full overflow-hidden bg-[#EEF4FC] text-slate-900 transition-colors duration-200 dark:bg-[#070D24] dark:text-white">
       {/* Background 3D & Doodle Decorations matching UI */}
       <AdhdDecorations />
 
@@ -130,10 +131,14 @@ export function AdhdHome({ firstName }: { firstName: string }) {
               </p>
             </div>
 
-            {/* Profile Avatar Badge matching UI */}
-            <div className="relative shrink-0">
-              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white/60 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md ring-2 ring-primary/40 dark:border-white/20">
-                <span className="font-display text-lg font-bold text-white">
+            {/* Profile Avatar & Theme Toggle matching UI */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <ThemeToggle />
+              <div
+                className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white/60 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md ring-2 ring-primary/40 dark:border-white/20"
+                title={displayName}
+              >
+                <span className="font-display text-base font-bold text-white">
                   {displayName.charAt(0)}
                 </span>
               </div>
@@ -262,6 +267,33 @@ export function AdhdHome({ firstName }: { firstName: string }) {
                   calmMode ? 'translate-x-6' : 'translate-x-0'
                 }`}
               />
+            </button>
+          </div>
+
+          {/* Theme Mode Switch (White Mode / Dark Mode) */}
+          <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-white/10">
+            <span id="theme-switch-label" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              {theme === 'dark' ? 'Dark theme' : 'White theme'}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={theme === 'dark'}
+              aria-labelledby="theme-switch-label"
+              onClick={toggleTheme}
+              className={`relative flex h-8 w-14 shrink-0 items-center rounded-full border border-slate-300 p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/20 ${
+                theme === 'dark'
+                  ? 'bg-[#05FF85] shadow-[0_0_12px_rgba(5,255,133,0.5)]'
+                  : 'bg-[#2563EB]'
+              }`}
+            >
+              <span
+                className={`flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-bold shadow-md transition-transform duration-200 ${
+                  theme === 'dark' ? 'translate-x-6 text-[#070D24]' : 'translate-x-0 text-[#2563EB]'
+                }`}
+              >
+                {theme === 'dark' ? '🌙' : '☀️'}
+              </span>
             </button>
           </div>
         </section>

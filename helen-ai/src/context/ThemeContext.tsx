@@ -88,19 +88,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
       const { data: needs, error: needsError } = await supabase
         .from('accessibility_needs')
-        .select('need_type')
+        .select('need_type, priority')
         .eq('student_id', session.user.id)
-        .eq('priority', 'primary')
-        .limit(1)
 
       if (!isMounted || request !== currentRequest) return
-      if (needsError) {
-        setActiveDisabilityPreset(null)
-        return
+      if (needsError || !needs || needs.length === 0) {
+        const stored = typeof window !== 'undefined' ? localStorage.getItem('accessibility-theme') : null
+        if (stored === 'adhd') {
+          setActiveDisabilityPreset('adhd')
+        } else {
+          setActiveDisabilityPreset(null)
+        }
+      } else {
+        const detectedNeed = (
+          needs.find(n => n.priority === 'primary')?.need_type ||
+          needs.find(n => n.need_type === 'adhd')?.need_type ||
+          needs[0]?.need_type ||
+          null
+        ) as AccessibilityNeedType | null
+        setActiveDisabilityPreset(getPresetName(detectedNeed))
       }
-
-      const primaryNeed = (needs?.[0]?.need_type ?? null) as AccessibilityNeedType | null
-      setActiveDisabilityPreset(getPresetName(primaryNeed))
 
       if (profile.role === 'student') {
         const { data: preferences, error: preferencesError } = await supabase
@@ -153,8 +160,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const tokens = getThemeTokens(activeDisabilityPreset, theme)
-    const slug = getThemeSlug(activeDisabilityPreset)
+    const isAdhdTheme = activeDisabilityPreset === 'adhd' || (typeof window !== 'undefined' && localStorage.getItem('accessibility-theme') === 'adhd')
+    const effectivePreset = isAdhdTheme ? 'adhd' : activeDisabilityPreset
+    const tokens = getThemeTokens(effectivePreset, theme)
+    const slug = getThemeSlug(effectivePreset)
     setThemeTokens(tokens)
     setThemeSlug(slug)
     setHideThemeToggle(shouldHideThemeToggle(tokens))
@@ -162,7 +171,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       const root = document.documentElement
       const isDarkMode = theme === 'dark'
-      const isAdhdTheme = activeDisabilityPreset === 'adhd'
       const foreground = isAdhdTheme
         ? isDarkMode ? '#F4F8FF' : '#0F172A'
         : tokens.colors.text
@@ -176,7 +184,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         : isAdhdTheme ? '#E8EEFF' : '#E9ECE8'
 
       root.setAttribute('data-profile', slug)
-      root.setAttribute('data-theme', activeDisabilityPreset === 'adhd' ? 'adhd' : theme)
+      root.setAttribute('data-theme', isAdhdTheme ? 'adhd' : theme)
       root.setAttribute('data-mode', theme)
       root.setAttribute('data-calm-mode', String(calmMode))
 
@@ -190,9 +198,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.style.setProperty('--color-text-muted', muted)
       root.style.setProperty('--color-surface-2', secondarySurface)
 
+      // Direct explicit token assignment for ADHD theme
+      if (isAdhdTheme) {
+        root.style.setProperty('--color-background', isDarkMode ? '#070D24' : '#EEF4FC')
+        root.style.setProperty('--adhd-screen', isDarkMode ? '#070D24' : '#EEF4FC')
+        root.style.setProperty('--adhd-surface', isDarkMode ? '#0E1A3C' : '#FFFFFF')
+        root.style.setProperty('--adhd-surface-2', isDarkMode ? '#14244E' : '#E8EEFF')
+        root.style.setProperty('--adhd-copy', isDarkMode ? '#F4F8FF' : '#0F172A')
+      }
+
       root.style.setProperty(
         '--font-family',
-        activeDisabilityPreset === 'adhd' ? "'Lexend', system-ui, sans-serif" : tokens.font.family
+        isAdhdTheme ? "'Lexend', system-ui, sans-serif" : tokens.font.family
       )
       root.style.setProperty(
         '--font-heading',
@@ -217,6 +234,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const next = theme === 'light' ? 'dark' : 'light'
     setTheme(next)
     setThemeSaveError('')
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('theme', next)
+      const root = document.documentElement
+      root.classList.remove('light', 'dark')
+      root.classList.add(next)
+      root.setAttribute('data-mode', next)
+    }
     void supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) return
       const { error } = await supabase

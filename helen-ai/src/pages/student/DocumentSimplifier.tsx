@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
-import { useNavigate } from 'react-router-dom'
 import { apiBaseUrl, apiFetch } from '@/services/api'
+import { AdhdDecorations } from '@/components/adhd/AdhdDecorations'
 
 type DocumentStatus = 'processing' | 'done' | 'failed'
 type SourceType = 'pdf' | 'image' | 'text'
@@ -203,6 +204,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
   const [pastedText, setPastedText] = useState('')
   const [title, setTitle] = useState('')
   const [outputType, setOutputType] = useState<SimplificationOutput>(initialOutputType)
+  const [adhdSingleTask, setAdhdSingleTask] = useState('Read question 1')
   const [preserveTerms, setPreserveTerms] = useState('')
   const [maxSentenceLength, setMaxSentenceLength] = useState(18)
   const [isDragging, setIsDragging] = useState(false)
@@ -698,57 +700,101 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
     learning_disability: 'Shorter paragraphs, plain language, and inline term definitions.',
   }
 
+  const isAdhd = preset === 'adhd' || adhdEnabled
+
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-8 text-text">
+    <div className="relative mx-auto w-full max-w-6xl space-y-7 text-text">
+      {isAdhd && <AdhdDecorations />}
+
       {!embedded && (
         <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-primary">DOCUMENT SIMPLIFIER</p>
-            <h1 className="mt-1 font-heading font-bold text-text">Your documents</h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted">Your text is adapted to your primary learning profile. Only you can access your document content.</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#8E9EC5]">
+              DOCUMENT SIMPLIFIER
+            </p>
+            <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
+              Your documents
+            </h1>
+            <p className="mt-1 max-w-xl text-sm font-medium text-slate-500 dark:text-[#8E9EC5]">
+              Your text is adapted to suit your learning processes.
+            </p>
+            {isAdhd ? (
+              <div className="mt-3">
+                <span className="adhd-badge-cyan inline-flex items-center rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wide">
+                  Adaptation: ADHD
+                </span>
+              </div>
+            ) : null}
           </div>
-          <p className="shrink-0 self-start rounded-md border border-text/20 bg-surface px-3 py-2 text-sm text-text">
-            Adaptation: <strong>{presetLabels[preset]}</strong>
-          </p>
+          {!isAdhd && (
+            <p className="shrink-0 self-start rounded-md border border-text/20 bg-surface px-3 py-2 text-sm text-text">
+              Adaptation: <strong>{presetLabels[preset]}</strong>
+            </p>
+          )}
         </header>
       )}
 
       <section className="grid min-w-0 grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(17rem,0.6fr)]">
-        <div className="flex min-w-0 flex-col space-y-5 rounded-lg border border-text/15 bg-surface p-4 sm:p-6">
-          <div>
-            <h2 className="font-heading text-xl font-semibold text-text">Add a document</h2>
-            <p className="mt-1 text-sm text-muted">{presetDescription[preset]}</p>
+        <div className="flex min-w-0 flex-col space-y-5 rounded-3xl border border-blue-500/15 bg-white p-5 shadow-sm sm:p-6 dark:border-white/10 dark:bg-[#0E1A3C]">
+          <div className="flex items-center justify-between">
+            <h2 className="font-heading text-lg font-bold text-slate-900 dark:text-white">Add a document</h2>
+            {isAdhd ? (
+              <span className="text-xs font-medium text-slate-400 dark:text-[#8E9EC5]">Focused sections...</span>
+            ) : (
+              <p className="mt-1 text-sm text-muted">{presetDescription[preset]}</p>
+            )}
           </div>
           {preview && <p className="rounded-md border border-text/15 bg-background p-3 text-sm text-muted">Visual preview only. Upload controls are disabled.</p>}
 
           <form onSubmit={upload} className="space-y-4">
             <fieldset disabled={preview} className="space-y-4 disabled:opacity-75">
               <legend className="sr-only">Upload a document to simplify</legend>
-            <div
-              onDragOver={event => { event.preventDefault(); setIsDragging(true) }}
-              onDragLeave={() => setIsDragging(false)}
-              onDrop={event => {
-                event.preventDefault()
-                if (!preview) handleDrop(event)
-              }}
-              className={`rounded-lg border-2 border-dashed p-5 text-center transition-colors sm:p-8 ${isDragging ? 'border-primary bg-primary/10' : 'border-text/25 bg-background'}`}
-            >
-              <p className="font-medium text-text">Drop a file here</p>
-              <p className="mt-1 text-sm text-muted">PDF, image, or plain text</p>
-              <label
-                htmlFor="document-file"
-                className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 focus-within:ring-2 focus-within:ring-primary"
+            
+            {/* Drop Zone Box with attached + button */}
+            <div className="flex items-stretch overflow-visible">
+              <div
+                onDragOver={event => { event.preventDefault(); setIsDragging(true) }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={event => {
+                  event.preventDefault()
+                  if (!preview) handleDrop(event)
+                }}
+                className={`flex-1 rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
+                  isDragging
+                    ? 'border-primary bg-primary/10'
+                    : 'border-blue-400/30 bg-slate-50/70 dark:border-cyan-400/30 dark:bg-[#0A1435]'
+                }`}
               >
-                Choose file
-              </label>
-              <input
-                id="document-file"
-                type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp,.txt,.md"
-                className="sr-only"
-                onChange={event => acceptFile(event.target.files?.[0])}
-              />
-              {selectedFile && <p className="mt-3 break-all text-sm font-medium text-text">{selectedFile.name}</p>}
+                <p className="font-bold text-slate-800 dark:text-white">Drop a file here</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-[#8E9EC5]">PDF, image, or plain text</p>
+                <label
+                  htmlFor="document-file"
+                  className="mt-3.5 inline-flex min-h-10 cursor-pointer items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-xs font-bold text-slate-800 shadow-sm hover:bg-slate-50 dark:border-white/20 dark:bg-[#142350] dark:text-white dark:hover:bg-[#1A2E65]"
+                >
+                  Choose file
+                </label>
+                <input
+                  id="document-file"
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,.tif,.tiff,.bmp,.txt,.md"
+                  className="sr-only"
+                  onChange={event => acceptFile(event.target.files?.[0])}
+                />
+                {selectedFile && <p className="mt-3 break-all text-xs font-bold text-primary">{selectedFile.name}</p>}
+              </div>
+
+              {/* Attached + Badge Button */}
+              {isAdhd && (
+                <div className="ml-2 flex items-center">
+                  <label
+                    htmlFor="document-file"
+                    title="Upload document"
+                    className="flex h-14 w-11 cursor-pointer flex-col items-center justify-center rounded-2xl bg-[#2563EB] font-bold text-white shadow-md transition-transform hover:scale-105 active:scale-95 dark:bg-[#05FF85] dark:text-[#060B1E] dark:shadow-[0_0_18px_rgba(5,255,133,0.45)]"
+                  >
+                    <span className="text-2xl leading-none">+</span>
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -844,6 +890,28 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
             <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-md border border-primary/30 bg-background p-4 text-sm text-text">
               <span className="h-5 w-5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" aria-hidden="true" />
               <span>{progressMessage || 'Preparing your document…'}</span>
+            </div>
+          )}
+
+          {/* "What is one thing to focus on?" Single focus card matching Screen 3 */}
+          {isAdhd && (
+            <div className="mt-4 rounded-3xl border border-blue-500/15 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0A1435]">
+              <h3 className="font-display text-base font-bold text-slate-900 dark:text-white">
+                What is one thing to focus on?
+              </h3>
+              <input
+                type="text"
+                value={adhdSingleTask}
+                onChange={e => setAdhdSingleTask(e.target.value)}
+                placeholder="Read question 1"
+                className="mt-3 min-h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-[#0E1A3C] dark:text-white"
+              />
+              <Link
+                to={`/focus?task=${encodeURIComponent(adhdSingleTask.trim() || 'Read question 1')}`}
+                className="adhd-glow-btn mt-3.5 flex min-h-12 w-full items-center justify-center rounded-2xl text-sm font-bold"
+              >
+                Start 15-minute focus session
+              </Link>
             </div>
           )}
         </div>

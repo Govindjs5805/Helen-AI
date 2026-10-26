@@ -164,16 +164,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const isDarkMode = theme === 'dark'
       const isAdhdTheme = activeDisabilityPreset === 'adhd'
       const foreground = isAdhdTheme
-        ? isDarkMode ? '#F4F6FF' : '#0B1020'
+        ? isDarkMode ? '#F4F8FF' : '#0F172A'
         : tokens.colors.text
       const muted = isAdhdTheme
-        ? isDarkMode ? '#C9D0F5' : '#39445F'
+        ? isDarkMode ? '#8E9EC5' : '#64748B'
         : tokens.layout.forcesOwnContrast
           ? tokens.colors.text
           : isDarkMode ? '#C9D0F5' : '#48534D'
       const secondarySurface = isDarkMode
-        ? isAdhdTheme ? '#33469F' : '#1A241D'
-        : isAdhdTheme ? '#E8ECF8' : '#E9ECE8'
+        ? isAdhdTheme ? '#14244E' : '#1A241D'
+        : isAdhdTheme ? '#E8EEFF' : '#E9ECE8'
 
       root.setAttribute('data-profile', slug)
       root.setAttribute('data-theme', activeDisabilityPreset === 'adhd' ? 'adhd' : theme)

@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ChartNoAxesCombined, Timer } from 'lucide-react'
+import { Timer } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/context/ThemeContext'
 import { attentionRequest } from '@/services/attentionApi'
-import { ParkedThoughtReview } from '@/components/ParkedThoughtReview'
-import { ThemeToggle } from '@/components/ThemeToggle'
 import { DateStrip } from './DateStrip'
-import { HelenMascot } from './HelenMascot'
 import { TaskCard, type FocusTask } from './TaskCard'
+import { AdhdDecorations } from './AdhdDecorations'
 
 interface TodaySummary {
   tasksDone: number
@@ -36,17 +34,20 @@ function localDateKey(date: Date): string {
 }
 
 export function AdhdHome({ firstName }: { firstName: string }) {
-  const { session } = useAuth()
+  const { session, profile } = useAuth()
   const { calmMode, setCalmMode, themeSaveError } = useTheme()
   const [timeOfDay] = useState(() => {
     const hour = new Date().getHours()
     return hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening'
   })
-  const [summary, setSummary] = useState<TodaySummary | null>(null)
+  const [, setSummary] = useState<TodaySummary | null>(null)
   const [plannerItems, setPlannerItems] = useState<PlannerItem[]>([])
   const [selectedDate, setSelectedDate] = useState(() => new Date())
   const [summaryLoading, setSummaryLoading] = useState(true)
-  const [summaryError, setSummaryError] = useState('')
+  const [, setSummaryError] = useState('')
+
+  // Student name preference
+  const displayName = profile?.full_name?.split(' ')[0] || firstName || 'Ahlada'
 
   useEffect(() => {
     const token = session?.access_token
@@ -112,131 +113,158 @@ export function AdhdHome({ firstName }: { firstName: string }) {
   )
 
   return (
-    <div className="adhd-home mx-auto w-full max-w-[1280px] space-y-7 text-text">
-      <header className="space-y-3">
-        <div className="flex min-w-0 items-center justify-between gap-3">
-          <h1 className="min-w-0 flex-1 whitespace-nowrap font-display font-semibold">
-            Good {timeOfDay}, {firstName}
-          </h1>
-          <ThemeToggle />
-        </div>
-        <p className="text-base text-muted">Welcome back to your learning journey.</p>
-        <p aria-live="polite" className="sr-only">
-          {themeSaveError || `Calm mode ${calmMode ? 'enabled' : 'disabled'}.`}
-        </p>
-      </header>
+    <div className="relative min-h-[calc(100dvh-5rem)] w-full overflow-hidden text-slate-900 transition-colors duration-200 dark:text-white">
+      {/* Background 3D & Doodle Decorations matching UI */}
+      <AdhdDecorations />
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(13rem,1fr)] lg:gap-10">
-        <div className="min-w-0 space-y-7">
-          <section aria-label="Dates this week">
-            <DateStrip onDateChange={setSelectedDate} />
-          </section>
-
-          <section aria-labelledby="today-plan-title">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h2 id="today-plan-title" className="font-display font-semibold">Your next steps</h2>
-              {!calmMode && <HelenMascot mood="focus" className="h-14 w-12 shrink-0 text-primary" />}
+      <div className="relative z-10 mx-auto w-full max-w-md space-y-6 px-1 sm:px-0">
+        {/* Header matching Screen 1 */}
+        <header className="pt-2">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+                Good {timeOfDay}, {displayName}
+              </h1>
+              <p className="mt-1 text-sm font-medium text-slate-500 dark:text-[#8E9EC5]">
+                Welcome back to your learning journey.
+              </p>
             </div>
-            {orderedTasks.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {orderedTasks.map((item, index) => {
-                  const task: FocusTask = {
-                    title: item.title,
-                    duration: item.estimated_minutes,
-                    color: (['lime', 'pink', 'periwinkle'] as const)[index % 3],
-                    label: index === 0 && item.status !== 'done' ? 'Now' : undefined,
-                  }
-                  return (
-                    <div key={item.id} className={index === 0 ? 'md:col-span-2' : undefined}>
-                      <TaskCard
-                        task={task}
-                        calmMode={calmMode}
-                        completed={item.status === 'done'}
-                        onToggleComplete={() => void setPlannerItemStatus(item, item.status === 'done' ? 'todo' : 'done')}
-                      />
-                    </div>
-                  )
-                })}
+
+            {/* Profile Avatar Badge matching UI */}
+            <div className="relative shrink-0">
+              <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white/60 bg-gradient-to-tr from-blue-600 to-indigo-500 shadow-md ring-2 ring-primary/40 dark:border-white/20">
+                <span className="font-display text-lg font-bold text-white">
+                  {displayName.charAt(0)}
+                </span>
               </div>
-            ) : summaryLoading ? (
-              <p role="status" className="text-sm text-muted">Loading today’s tasks…</p>
-            ) : (
-              <div className="rounded-2xl border border-dashed border-text/30 bg-surface p-5">
-                <p className="font-semibold">No tasks planned for today yet.</p>
-                <Link to="/planner" className="mt-3 inline-flex min-h-11 items-center rounded-md border border-primary px-4 py-2 font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+            </div>
+          </div>
+          {themeSaveError && (
+            <p role="status" className="mt-2 text-xs text-rose-400">
+              {themeSaveError}
+            </p>
+          )}
+        </header>
+
+        {/* Date Strip with Track Indicator */}
+        <section aria-label="Dates this week">
+          <DateStrip onDateChange={setSelectedDate} />
+        </section>
+
+        {/* Your next steps section matching Screen 1 */}
+        <section aria-labelledby="today-plan-title" className="space-y-3">
+          <h2 id="today-plan-title" className="font-display text-lg font-bold text-slate-900 dark:text-white">
+            Your next steps
+          </h2>
+
+          {orderedTasks.length > 0 ? (
+            <div className="space-y-3">
+              {orderedTasks.map((item, index) => {
+                const task: FocusTask = {
+                  title: item.title,
+                  duration: item.estimated_minutes,
+                  color: (['lime', 'pink', 'periwinkle'] as const)[index % 3],
+                  label: index === 0 && item.status !== 'done' ? 'Now' : undefined,
+                }
+                return (
+                  <TaskCard
+                    key={item.id}
+                    task={task}
+                    calmMode={calmMode}
+                    completed={item.status === 'done'}
+                    onToggleComplete={() => void setPlannerItemStatus(item, item.status === 'done' ? 'todo' : 'done')}
+                  />
+                )
+              })}
+            </div>
+          ) : summaryLoading ? (
+            <div className="flex min-h-[7rem] items-center justify-center rounded-3xl border border-blue-500/15 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-[#0E1A3C]">
+              <p className="text-sm font-medium text-slate-500 dark:text-[#8E9EC5]">Loading today’s tasks…</p>
+            </div>
+          ) : (
+            /* Card matching "No tasks planned for today yet." with attached + button */
+            <div className="flex items-stretch overflow-visible">
+              <div className="flex-1 rounded-3xl border border-blue-500/15 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#0E1A3C]">
+                <p className="text-base font-semibold text-slate-800 dark:text-white">
+                  No tasks planned for today yet.
+                </p>
+                <Link
+                  to="/planner"
+                  className="mt-3.5 inline-flex min-h-11 items-center rounded-2xl border border-slate-300 bg-slate-50 px-5 text-sm font-bold text-slate-800 transition-colors hover:bg-slate-100 dark:border-blue-400/30 dark:bg-[#08122C] dark:text-[#05FF85] dark:hover:bg-[#0D1B3E]"
+                >
                   Add a task to your plan
                 </Link>
               </div>
-            )}
-          </section>
-        </div>
 
-        <aside className="min-w-0 space-y-5">
-          <section className="rounded-2xl border border-text/15 bg-surface p-5 sm:p-6" aria-labelledby="focus-card-title">
-            <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-2 text-text" aria-hidden="true">
-                <Timer className="h-5 w-5" />
-              </span>
-              <div>
-                <h2 id="focus-card-title" className="font-display font-semibold">Focus timer</h2>
-                <p className="text-sm text-muted">One step at a time.</p>
+              {/* Attached Green/Blue Plus Button */}
+              <div className="ml-2 flex items-center">
+                <Link
+                  to="/planner"
+                  aria-label="Add a task"
+                  className="flex h-14 w-11 flex-col items-center justify-center rounded-2xl bg-[#2563EB] font-bold text-white shadow-md transition-transform hover:scale-105 active:scale-95 dark:bg-[#05FF85] dark:text-[#060B1E] dark:shadow-[0_0_18px_rgba(5,255,133,0.45)]"
+                >
+                  <span className="text-2xl leading-none">+</span>
+                </Link>
               </div>
             </div>
-            <Link
-              to="/focus"
-              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          )}
+        </section>
+
+        {/* Focus timer card matching Screen 1 */}
+        <section
+          aria-labelledby="focus-card-title"
+          className="rounded-3xl border border-blue-500/15 bg-white p-5 shadow-sm transition-all dark:border-white/10 dark:bg-[#0E1A3C] dark:shadow-md"
+        >
+          <div className="flex items-center gap-3.5">
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E8EEFF] text-[#2563EB] dark:bg-[#142350] dark:text-[#05FF85]"
+              aria-hidden="true"
             >
-              Start focus session
-            </Link>
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-text/15 pt-3">
-              <span id="calm-mode-label" className="text-sm font-medium">Calm mode</span>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={calmMode}
-                aria-labelledby="calm-mode-label"
-                onClick={() => setCalmMode(!calmMode)}
-                className={`relative flex min-h-11 w-16 shrink-0 items-center rounded-full border border-text/25 p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${calmMode ? 'justify-end bg-primary' : 'justify-start bg-surface-2'}`}
-              >
-                <span className="block h-8 w-8 rounded-full border border-text/20 bg-background shadow-sm" />
-              </button>
+              <Timer className="h-6 w-6" />
+            </span>
+            <div>
+              <h2 id="focus-card-title" className="font-display text-lg font-bold text-slate-900 dark:text-white">
+                Focus timer
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-[#8E9EC5]">
+                One step at a time.
+              </p>
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-2xl border border-text/15 bg-surface p-5 sm:p-6" aria-labelledby="today-summary-title">
-            <h2 id="today-summary-title" className="font-display font-semibold">
-              {selectedDate.toDateString() === new Date().toDateString()
-                ? 'Today'
-                : selectedDate.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-            </h2>
-            {summaryLoading ? (
-              <p role="status" className="mt-3 text-sm text-muted">Loading today’s summary…</p>
-            ) : summaryError ? (
-              <p role="alert" className="mt-3 text-sm text-muted">{summaryError}</p>
-            ) : summary && (
-              <dl className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-surface-2 p-4">
-                  <dt className="text-sm text-muted">Tasks done</dt>
-                  <dd className="mt-1 font-display text-2xl font-semibold">{summary.tasksDone}</dd>
-                </div>
-                <div className="rounded-xl bg-surface-2 p-4">
-                  <dt className="text-sm text-muted">Minutes focused</dt>
-                  <dd className="mt-1 font-display text-2xl font-semibold">{summary.minutesFocused}</dd>
-                </div>
-              </dl>
-            )}
-            {summary && summaryError && <p role="alert" className="mt-3 text-sm text-muted">{summaryError}</p>}
-            <Link
-              to="/progress"
-              className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          {/* Big Glowing CTA Button */}
+          <Link
+            to="/focus"
+            className="adhd-glow-btn mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-2xl text-base font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          >
+            Start focus session
+          </Link>
+
+          {/* Calm Mode Switch */}
+          <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-white/10">
+            <span id="calm-mode-label" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+              Calm mode
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={calmMode}
+              aria-labelledby="calm-mode-label"
+              onClick={() => setCalmMode(!calmMode)}
+              className={`relative flex h-8 w-14 shrink-0 items-center rounded-full border border-slate-300 p-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/20 ${
+                calmMode
+                  ? 'bg-[#2563EB] dark:bg-[#05FF85] dark:shadow-[0_0_12px_rgba(5,255,133,0.5)]'
+                  : 'bg-slate-200 dark:bg-[#142350]'
+              }`}
             >
-              <ChartNoAxesCombined className="h-4 w-4" aria-hidden="true" />
-              View progress
-            </Link>
-          </section>
-
-          <ParkedThoughtReview compact />
-        </aside>
+              <span
+                className={`block h-7 w-7 rounded-full bg-white shadow-md transition-transform duration-200 ${
+                  calmMode ? 'translate-x-6' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   )

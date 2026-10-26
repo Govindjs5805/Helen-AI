@@ -53,7 +53,7 @@ export function SubjectTags({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.15 }}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-medium text-white"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#2875FB] px-3 py-1 text-xs font-medium text-white shadow-sm shadow-[#2875FB]/20"
                 >
                   {s}
                   <button
@@ -94,12 +94,12 @@ export function SubjectTags({
           aria-invalid={!!error}
           aria-describedby={error ? 'subjects-error' : undefined}
           className={[
-            'flex-1 rounded-lg border bg-surface px-4 py-2.5 text-sm text-text transition-colors',
+            'flex-1 rounded-xl border border-[#C3D7FC] bg-white px-4 py-3 text-sm text-text shadow-sm shadow-[#030E50]/5 transition-all dark:border-[#35518B] dark:bg-[#132653] dark:shadow-black/10',
             'placeholder:text-text/40',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
             error
               ? 'border-red-500/70'
-              : 'border-black/10 dark:border-white/15',
+              : '',
           ].join(' ')}
         />
         <button
@@ -107,9 +107,9 @@ export function SubjectTags({
           onClick={onAdd}
           disabled={!inputValue.trim()}
           className={[
-            'rounded-lg border border-primary px-4 py-2.5 text-sm font-medium text-primary transition-colors',
-            'hover:bg-primary hover:text-white',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'rounded-xl border border-[#2875FB] px-4 py-2.5 text-sm font-medium text-[#1E3FB2] transition-all',
+            'hover:bg-[#2875FB] hover:text-white',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
             'disabled:cursor-not-allowed disabled:opacity-50',
           ].join(' ')}
         >
@@ -158,10 +158,10 @@ function SuggestedSubjects({
               disabled={isAdded}
               className={[
                 'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
                 isAdded
-                  ? 'border-primary/30 bg-primary/10 text-primary/60'
-                  : 'border-black/10 bg-background text-text/70 hover:border-primary/40 hover:text-primary dark:border-white/15',
+                  ? 'border-[#2875FB]/30 bg-[#C3D7FC]/45 text-[#1E3FB2]/70 dark:bg-[#1E3FB2]/40 dark:text-[#C3D7FC]'
+                  : 'border-[#C3D7FC] bg-[#F7FAFF] text-text/70 hover:border-[#2875FB]/60 hover:text-[#1E3FB2] dark:border-[#39518f] dark:bg-[#07133F]',
               ].join(' ')}
             >
               {isAdded ? `✓ ${s}` : `+ ${s}`}
@@ -172,7 +172,7 @@ function SuggestedSubjects({
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="rounded-full px-3 py-1 text-xs font-medium text-text/50 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+          className="rounded-full px-3 py-1 text-xs font-medium text-text/50 hover:text-[#1E3FB2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60 dark:hover:text-[#C3D7FC]"
           >
             {expanded ? 'Show less' : `+${SUGGESTED_SUBJECTS.length - 6} more`}
           </button>

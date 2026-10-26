@@ -21,20 +21,20 @@ export function AttentionProfileEditor({ preferences, onChange, onPreset }: Atte
       <fieldset className="space-y-2">
         <legend className="text-sm font-semibold">Starting point</legend>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => onPreset('light')} className="min-h-11 rounded-md border border-primary px-4 py-2 font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Light support</button>
-          <button type="button" onClick={() => onPreset('strong')} className="min-h-11 rounded-md border border-primary px-4 py-2 font-semibold text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Strong focus support</button>
-          <button type="button" onClick={() => onPreset('custom')} className="min-h-11 rounded-md border border-text/25 px-4 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Custom</button>
+          <button type="button" onClick={() => onPreset('light')} className="min-h-11 rounded-xl border border-[#2875FB] px-4 py-2 font-semibold text-[#1E3FB2] transition-colors hover:bg-[#2875FB] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Light support</button>
+          <button type="button" onClick={() => onPreset('strong')} className="min-h-11 rounded-xl border border-[#2875FB] px-4 py-2 font-semibold text-[#1E3FB2] transition-colors hover:bg-[#2875FB] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Strong focus support</button>
+          <button type="button" onClick={() => onPreset('custom')} className="min-h-11 rounded-xl border border-text/25 px-4 py-2 transition-colors hover:border-[#2875FB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Custom</button>
         </div>
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm font-medium">What kind of support fits?
-          <select value={preferences.presentation} onChange={event => update('presentation', event.target.value as AttentionPreferences['presentation'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+           <select value={preferences.presentation} onChange={event => update('presentation', event.target.value as AttentionPreferences['presentation'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="not_sure">Not sure</option><option value="inattentive">Focus and organization</option><option value="hyperactive_impulsive">Movement and impulse support</option><option value="combined">A combination</option>
           </select>
         </label>
         <label className="space-y-1 text-sm font-medium">Content size
-          <select value={preferences.chunk_size} onChange={event => update('chunk_size', event.target.value as AttentionPreferences['chunk_size'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+           <select value={preferences.chunk_size} onChange={event => update('chunk_size', event.target.value as AttentionPreferences['chunk_size'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="one_paragraph">One paragraph at a time</option><option value="short_section">A short section at a time</option>
           </select>
         </label>
@@ -43,12 +43,12 @@ export function AttentionProfileEditor({ preferences, onChange, onPreset }: Atte
         <Range label="Daily focus goal" value={preferences.daily_goal} min={1} max={12} suffix=" sessions" onChange={value => update('daily_goal', value)} />
         <Range label="Weekly focus goal" value={preferences.weekly_goal} min={1} max={50} suffix=" sessions" onChange={value => update('weekly_goal', value)} />
         <label className="space-y-1 text-sm font-medium">Distraction level
-          <select value={preferences.distraction_level} onChange={event => update('distraction_level', event.target.value as AttentionPreferences['distraction_level'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+           <select value={preferences.distraction_level} onChange={event => update('distraction_level', event.target.value as AttentionPreferences['distraction_level'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="low">Fewer distractions</option><option value="medium">Balanced</option><option value="high">More stimulation</option>
           </select>
         </label>
         <label className="space-y-1 text-sm font-medium">Motivation extras
-          <select value={preferences.gamification} onChange={event => update('gamification', event.target.value as AttentionPreferences['gamification'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+           <select value={preferences.gamification} onChange={event => update('gamification', event.target.value as AttentionPreferences['gamification'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="off">Off</option><option value="light">Light encouragement</option><option value="full">Points and badges</option>
           </select>
         </label>
@@ -67,9 +67,9 @@ export function AttentionProfileEditor({ preferences, onChange, onPreset }: Atte
 
       <section className="rounded-lg border border-text/15 bg-surface p-4" aria-label="Focus preview">
         <h2 className="text-sm font-semibold">A preview of your focus session</h2>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-md bg-background p-4">
+         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#C3D7FC]/60 bg-[#F7FAFF] p-4 dark:border-[#35518B] dark:bg-[#132653]">
           <div><p className="font-semibold">One thing at a time</p><p className="mt-1 text-sm text-text/70">Read question 1 and underline what it asks.</p></div>
-          <span className="rounded-full border border-primary/30 px-3 py-1 text-sm font-semibold text-primary">{preferences.focus_session_minutes}:00</span>
+          <span className="rounded-full border border-[#2875FB]/30 px-3 py-1 text-sm font-semibold text-[#1E3FB2] dark:text-[#C3D7FC]">{preferences.focus_session_minutes}:00</span>
         </div>
         <p className="mt-2 text-xs text-text/60">Dyslexia settings such as your chosen font and read-aloud remain active alongside focus supports.</p>
       </section>
@@ -78,14 +78,14 @@ export function AttentionProfileEditor({ preferences, onChange, onPreset }: Atte
 }
 
 function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
-  return <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} className="accent-primary" />{label}</label>
+  return <label className="flex min-h-11 items-center gap-2 text-sm"><input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} className="accent-[#2875FB]" />{label}</label>
 }
 
 function Range({ label, value, min, max, suffix, onChange }: { label: string; value: number; min: number; max: number; suffix: string; onChange: (value: number) => void }) {
   return (
     <label className="space-y-1 text-sm font-medium">
       <span className="flex justify-between gap-2"><span>{label}</span><span aria-live="polite">{value}{suffix}</span></span>
-      <input type="range" min={min} max={max} value={value} onChange={event => onChange(Number(event.target.value))} className="w-full accent-primary" />
+      <input type="range" min={min} max={max} value={value} onChange={event => onChange(Number(event.target.value))} className="w-full accent-[#2875FB]" />
     </label>
   )
 }

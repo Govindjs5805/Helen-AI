@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* The app persists theme state on the root element, so dark utilities must
+   follow the application toggle rather than the operating-system preference. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --text-xs: 0.875rem;
   --color-background: #FAFAF7;

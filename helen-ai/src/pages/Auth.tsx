@@ -50,6 +50,12 @@ function validateName(v: string) {
   return null
 }
 
+function validateConfirmPassword(value: string, password: string) {
+  if (!value) return 'Please confirm your password'
+  if (value !== password) return 'Passwords do not match'
+  return null
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
@@ -63,6 +69,8 @@ function FormInput({
   error,
   placeholder,
   autoComplete,
+  showPassword = false,
+  onTogglePassword,
 }: {
   id: string
   label: string
@@ -72,31 +80,59 @@ function FormInput({
   error?: string | null
   placeholder?: string
   autoComplete?: string
+  showPassword?: boolean
+  onTogglePassword?: () => void
 }) {
   const hasError = Boolean(error)
+  const isPassword = type === 'password'
   return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-text">
+    <div className="flex flex-col gap-2">
+      <label htmlFor={id} className="text-xs font-bold tracking-wide text-[#030E50] dark:text-[#C3D7FC]">
         {label}
       </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        aria-invalid={hasError}
-        aria-describedby={hasError ? `${id}-error` : undefined}
-        className={[
-          'w-full rounded-lg border bg-surface px-4 py-3 text-sm text-text transition-colors',
-          'placeholder:text-text/40',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:border-primary',
-          hasError
-            ? 'border-red-500/70 focus-visible:ring-red-500/60'
-            : 'border-black/10 dark:border-white/15',
-        ].join(' ')}
-      />
+      <div className="relative">
+        <input
+          id={id}
+          type={isPassword && showPassword ? 'text' : type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          aria-invalid={hasError}
+          aria-describedby={hasError ? `${id}-error` : undefined}
+          className={[
+            'w-full rounded-xl border bg-white px-4 py-3.5 text-sm text-[#030E50] transition-all placeholder:text-[#63709A]/60 dark:bg-[#132653] dark:text-[#EEF3FF] dark:placeholder:text-[#C3D7FC]/45',
+            'focus-visible:border-[#2875FB] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#2875FB]/15',
+            isPassword ? 'pr-12' : '',
+            hasError
+              ? 'border-red-500/70 focus-visible:ring-red-500/20'
+              : 'border-[#C3D7FC] dark:border-[#39518f]',
+          ].join(' ')}
+        />
+        {isPassword && onTogglePassword && (
+          <button
+            type="button"
+            onClick={onTogglePassword}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-pressed={showPassword}
+            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#1E3FB2] transition-colors hover:bg-[#C3D7FC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB] dark:text-[#C3D7FC] dark:hover:bg-[#1E3FB2]/40"
+          >
+            {showPassword ? (
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 3l18 18" />
+                <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83" />
+                <path d="M9.88 5.09A10.94 10.94 0 0 1 12 4.5c7 0 11 7.5 11 7.5a18.5 18.5 0 0 1-3.17 3.94" />
+                <path d="M6.61 6.61C3.69 8.61 1 12 1 12s4 7.5 11 7.5a10.8 10.8 0 0 0 4.13-.82" />
+              </svg>
+            ) : (
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            )}
+          </button>
+        )}
+      </div>
       {hasError && (
         <p id={`${id}-error`} role="alert" className="text-xs text-red-500">
           {error}
@@ -134,12 +170,12 @@ function SubmitButton({
       whileTap={{ scale: 0.97 }}
       className={[
         'relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
         isSuccess
           ? 'bg-emerald-500 text-white'
           : isError
           ? 'bg-red-500/90 text-white hover:bg-red-500'
-          : 'bg-primary text-white hover:bg-primary/90',
+          : 'bg-[#2875FB] text-white shadow-lg shadow-[#2875FB]/20 hover:bg-[#1E3FB2]',
         isLoading ? 'cursor-not-allowed opacity-80' : '',
       ].join(' ')}
     >
@@ -194,6 +230,8 @@ export function Auth() {
   // Form state
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [role, setRole] = useState<UserRole>('student')
   const [instituteName, setInstituteName] = useState('')
@@ -203,6 +241,7 @@ export function Auth() {
   // Validation errors
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
   const [fullNameError, setFullNameError] = useState<string | null>(null)
   const [teacherDetailsError, setTeacherDetailsError] = useState<string | null>(null)
 
@@ -237,6 +276,7 @@ export function Auth() {
   function validateAll(): boolean {
     const e = validateEmail(email)
     const p = validatePassword(password)
+    const cp = mode === 'register' ? validateConfirmPassword(confirmPassword, password) : null
     const n = mode === 'register' ? validateName(fullName) : null
     const teacherError = mode === 'register' && role === 'teacher'
       ? !instituteName.trim()
@@ -248,9 +288,10 @@ export function Auth() {
 
     setEmailError(e)
     setPasswordError(p)
+    setConfirmPasswordError(cp)
     setFullNameError(n)
     setTeacherDetailsError(teacherError)
-    return !e && !p && !n && !teacherError
+    return !e && !p && !cp && !n && !teacherError
   }
 
     async function handleSubmit(e: FormEvent) {
@@ -315,6 +356,7 @@ export function Auth() {
     setMode(newMode)
     setEmailError(null)
     setPasswordError(null)
+    setConfirmPasswordError(null)
     setFullNameError(null)
     setTeacherDetailsError(null)
     setSubmitError(null)
@@ -322,9 +364,9 @@ export function Auth() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background text-text">
+    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#F7FAFF] text-[#030E50] dark:bg-[#07133F] dark:text-[#EEF3FF]">
       {/* ── Navbar ─────────────────────────────────────────────────── */}
-      <header className="absolute right-0 top-0 z-10 p-4 sm:p-6">
+      <header className="absolute right-0 top-0 z-20 p-4 sm:p-6">
         <ThemeToggle />
       </header>
 
@@ -335,24 +377,36 @@ export function Auth() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex flex-col justify-center px-6 pt-24 pb-10 lg:w-1/2 lg:px-16 lg:pb-0"
+          className="relative flex flex-col justify-center overflow-hidden bg-gradient-to-br from-[#030E50] via-[#10277e] to-[#1E3FB2] px-6 pb-12 pt-28 text-white lg:min-h-dvh lg:w-1/2 lg:px-16 lg:pb-0 lg:pt-20"
         >
+          <motion.div
+            aria-hidden="true"
+            animate={{ y: [0, -18, 0], rotate: [0, 5, 0] }}
+            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-[#C3D7FC]/35 shadow-[0_0_0_24px_rgba(195,215,252,0.06),0_0_0_52px_rgba(195,215,252,0.05)]"
+          />
+          <motion.div
+            aria-hidden="true"
+            animate={{ y: [0, 14, 0], rotate: [-12, -5, -12] }}
+            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
+            className="pointer-events-none absolute bottom-16 left-12 h-28 w-28 rounded-[40%_60%_58%_42%] bg-[#C3D7FC]/15"
+          />
           <motion.div variants={slideUpFade}>
-            <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary">
-              <span className="font-heading text-xl font-bold leading-none text-white">H</span>
+            <div className="mb-8 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#C3D7FC] shadow-lg shadow-black/20">
+              <span className="font-heading text-xl font-bold leading-none text-[#030E50]">H</span>
             </div>
           </motion.div>
 
           <motion.h1
             variants={slideUpFade}
-            className="font-heading text-5xl font-bold tracking-tight text-text sm:text-6xl lg:text-7xl"
+            className="relative font-heading text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl"
           >
             Helen AI
           </motion.h1>
 
           <motion.p
             variants={slideUpFade}
-            className="mt-5 max-w-md text-lg leading-relaxed text-text sm:text-xl"
+            className="relative mt-5 max-w-md text-lg leading-relaxed text-white/75 sm:text-xl"
           >
             Your study companion that actually gets where you&apos;re stuck.
             Helen listens to what you need, explains it in a way that clicks,
@@ -365,25 +419,25 @@ export function Auth() {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex items-center justify-center px-6 pb-12 pt-8 lg:w-1/2 lg:px-16"
+          className="flex items-center justify-center px-5 pb-12 pt-20 sm:px-8 lg:min-h-dvh lg:w-1/2 lg:px-16 lg:pt-8"
         >
           {/* Card — asymmetric radius + accent-green top border */}
           <motion.div
             variants={slideUpFade}
             className={[
-              'relative w-full max-w-md overflow-hidden rounded-[2rem] border-t-2 border-primary',
-              'bg-surface shadow-2xl shadow-black/5 dark:border-primary/80 dark:shadow-black/40',
+              'relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[#C3D7FC] border-t-4 border-t-[#2875FB]',
+              'bg-white shadow-[0_24px_70px_rgba(3,14,80,0.14)] dark:border-[#263F7A] dark:bg-[#0B1A4A] dark:shadow-black/40',
               // Asymmetric radius: more on top-right than the rest of the card.
               'rounded-tr-[3rem]',
               // Subtle inner border overlay to separate the asymmetric corner from the card body.
               'after:pointer-events-none after:absolute after:inset-0',
               'after:rounded-[2rem] after:rounded-tr-[3rem]',
-              'after:border after:border-black/5 dark:after:border-white/5',
+               'after:border after:border-[#C3D7FC]/40 dark:after:border-white/10',
             ].join(' ')}
           >
             <div className="px-8 py-9 sm:px-10 sm:py-10">
               {/* Mode toggle — pill segment control */}
-              <div className="mb-8 flex rounded-xl bg-background p-1">
+              <div className="mb-8 flex rounded-xl bg-[#EEF4FF] p-1 dark:bg-[#132653]">
                 {(['login', 'register'] as AuthMode[]).map(m => (
                   <button
                     key={m}
@@ -392,8 +446,8 @@ export function Auth() {
                     className={[
                       'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200',
                       mode === m
-                        ? 'bg-surface text-text shadow-sm'
-                        : 'text-text/80 hover:text-text',
+                        ? 'bg-white text-[#030E50] shadow-sm dark:bg-[#1E3FB2] dark:text-white'
+                        : 'text-[#63709A] hover:text-[#030E50] dark:text-[#C3D7FC]/75 dark:hover:text-white',
                     ].join(' ')}
                   >
                     {m === 'login' ? 'Sign in' : 'Create account'}
@@ -444,16 +498,46 @@ export function Auth() {
                 <FormInput
                   id="password"
                   label="Password"
-                  type="password"
-                  value={password}
-                  onChange={v => {
-                    setPassword(v)
-                    if (passwordError) setPasswordError(validatePassword(v))
-                  }}
+                   type="password"
+                   value={password}
+                   onChange={v => {
+                     setPassword(v)
+                     if (passwordError) setPasswordError(validatePassword(v))
+                     if (confirmPasswordError) setConfirmPasswordError(validateConfirmPassword(confirmPassword, v))
+                   }}
                   error={passwordError}
-                  placeholder={mode === 'register' ? 'At least 8 characters' : ''}
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                />
+                   placeholder={mode === 'register' ? 'At least 8 characters' : ''}
+                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                   showPassword={showPassword}
+                   onTogglePassword={() => setShowPassword(value => !value)}
+                 />
+
+                 {mode === 'register' && (
+                   <motion.div
+                     key="confirmPassword"
+                     initial={{ opacity: 0, height: 0 }}
+                     animate={{ opacity: 1, height: 'auto' }}
+                     exit={{ opacity: 0, height: 0 }}
+                     transition={{ duration: 0.25 }}
+                     className="overflow-hidden"
+                   >
+                     <FormInput
+                       id="confirmPassword"
+                       label="Confirm password"
+                       type="password"
+                       value={confirmPassword}
+                       onChange={value => {
+                         setConfirmPassword(value)
+                         setConfirmPasswordError(validateConfirmPassword(value, password))
+                       }}
+                       error={confirmPasswordError}
+                       placeholder="Re-enter your password"
+                       autoComplete="new-password"
+                       showPassword={showPassword}
+                       onTogglePassword={() => setShowPassword(value => !value)}
+                     />
+                   </motion.div>
+                 )}
 
                 {/* Role selector — register only, pill buttons */}
                 {mode === 'register' && (

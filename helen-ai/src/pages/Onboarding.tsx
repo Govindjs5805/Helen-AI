@@ -313,7 +313,7 @@ export function Onboarding() {
       {submitSuccess ? (
         <SuccessMessage />
       ) : (
-        <div className="relative overflow-hidden">
+        <div className="relative">
           <AnimatePresence initial={false} custom={slideDirection} mode="wait">
             <motion.div
               key={step}
@@ -367,7 +367,7 @@ export function Onboarding() {
                   />
                   <div className="flex justify-between">
                     <button type="button" onClick={handleBack} className="min-h-11 rounded-md border border-text/25 px-5 py-2 text-sm font-semibold">Back</button>
-                    <button type="button" onClick={handleNext} className="min-h-11 rounded-md bg-primary px-6 py-2 text-sm font-semibold text-white">Continue</button>
+                    <button type="button" onClick={handleNext} className="min-h-11 rounded-xl bg-[#2875FB] px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2875FB]/20 transition-all hover:-translate-y-0.5 hover:bg-[#1E3FB2]">Continue</button>
                   </div>
                 </div>
               )}
@@ -398,7 +398,7 @@ export function Onboarding() {
                   />
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <button type="button" onClick={handleBack} className="min-h-11 rounded-md border border-text/25 px-5 py-2 text-sm font-semibold">Back</button>
-                    <button type="button" onClick={handleNext} className="min-h-11 rounded-md bg-primary px-6 py-2 text-sm font-semibold text-white">Continue</button>
+                    <button type="button" onClick={handleNext} className="min-h-11 rounded-xl bg-[#2875FB] px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2875FB]/20 transition-all hover:-translate-y-0.5 hover:bg-[#1E3FB2]">Continue</button>
                     <button type="button" onClick={() => setStep(reviewStep)} className="min-h-11 px-3 py-2 text-sm underline underline-offset-4">Skip for now</button>
                   </div>
                 </div>
@@ -522,12 +522,12 @@ function Step1({
             aria-invalid={!!errors.age}
             aria-describedby={errors.age ? 'age-error' : undefined}
             className={[
-              'w-full rounded-lg border bg-surface px-4 py-3 text-sm text-text transition-colors',
+              'w-full rounded-xl border border-[#C3D7FC] bg-white px-4 py-3.5 text-sm text-text shadow-sm shadow-[#030E50]/5 transition-all dark:border-[#35518B] dark:bg-[#132653] dark:shadow-black/10',
               'placeholder:text-text/40',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
               errors.age
                 ? 'border-red-500/70'
-                : 'border-black/10 dark:border-white/15',
+                : '',
             ].join(' ')}
           />
           {errors.age && (
@@ -550,12 +550,12 @@ function Step1({
             aria-invalid={!!errors.grade}
             aria-describedby={errors.grade ? 'grade-error' : undefined}
             className={[
-              'w-full rounded-lg border bg-surface px-4 py-3 text-sm text-text transition-colors',
+              'w-full rounded-xl border border-[#C3D7FC] bg-white px-4 py-3.5 text-sm text-text shadow-sm shadow-[#030E50]/5 transition-all dark:border-[#35518B] dark:bg-[#132653] dark:shadow-black/10',
               'placeholder:text-text/40',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
               errors.grade
                 ? 'border-red-500/70'
-                : 'border-black/10 dark:border-white/15',
+                : '',
             ].join(' ')}
           />
           <datalist id="grade-suggestions">
@@ -594,9 +594,9 @@ function Step1({
           placeholder="e.g. Get better at algebra and understand physics concepts faster"
           rows={3}
           className={[
-            'w-full resize-none rounded-lg border border-black/10 bg-surface px-4 py-3 text-sm text-text transition-colors',
+            'w-full resize-none rounded-xl border border-[#C3D7FC] bg-white px-4 py-3.5 text-sm text-text shadow-sm shadow-[#030E50]/5 transition-all dark:border-[#35518B] dark:bg-[#132653] dark:shadow-black/10',
             'placeholder:text-text/40',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
             'dark:border-white/15',
           ].join(' ')}
         />
@@ -613,9 +613,9 @@ function Step1({
         <button
           type="submit"
           className={[
-            'rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white transition-colors',
-            'hover:bg-primary/90',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'rounded-xl bg-[#2875FB] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#2875FB]/20 transition-all',
+            'hover:-translate-y-0.5 hover:bg-[#1E3FB2]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
           ].join(' ')}
         >
           Continue
@@ -710,9 +710,9 @@ function Step2({
               onChange={e => setOtherDescription(e.target.value)}
               placeholder="e.g. Processing speed, working memory differences"
               className={[
-                'w-full rounded-lg border border-black/10 bg-surface px-4 py-3 text-sm text-text transition-colors',
+                'w-full rounded-xl border border-[#C3D7FC] bg-white px-4 py-3 text-sm text-text transition-colors dark:border-[#39518f] dark:bg-[#07133F]',
                 'placeholder:text-text/40',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
                 'dark:border-white/15',
               ].join(' ')}
             />
@@ -726,7 +726,7 @@ function Step2({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
-          className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-5"
+          className="space-y-3 rounded-2xl border border-[#2875FB]/25 bg-[#C3D7FC]/25 p-5 dark:border-[#2875FB]/35 dark:bg-[#1E3FB2]/20"
         >
           <p className="text-sm font-medium text-text">
             Which affects you most day-to-day?{' '}
@@ -745,10 +745,10 @@ function Step2({
                   onClick={() => setPrimaryNeed(need)}
                   className={[
                     'flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition-colors',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
                     isPrimary
-                      ? 'border-primary bg-primary text-white'
-                      : 'border-black/10 bg-surface text-text dark:border-white/15 dark:bg-surface',
+                      ? 'border-[#2875FB] bg-[#2875FB] text-white shadow-md shadow-[#2875FB]/20'
+                      : 'border-[#C3D7FC] bg-white text-text dark:border-[#39518f] dark:bg-[#07133F]',
                   ].join(' ')}
                 >
                   {isPrimary && (
@@ -766,7 +766,7 @@ function Step2({
       {primaryNeed && (
         <div
           key={primaryNeed}
-          className="space-y-3 rounded-xl border border-black/10 bg-surface p-5 dark:border-white/10"
+          className="space-y-3 rounded-2xl border border-[#C3D7FC] bg-white p-5 dark:border-[#39518f] dark:bg-[#07133F]"
         >
           <h3 className="font-heading text-sm font-semibold text-text">
             Live preview of your theme
@@ -817,9 +817,8 @@ function Step2({
           onClick={onBack}
           className={[
             'rounded-xl border border-black/10 px-6 py-3 text-sm font-medium text-text transition-colors',
-            'hover:border-primary/40 hover:text-primary',
-            'dark:border-white/15',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'hover:border-[#2875FB]/60 hover:text-[#1E3FB2] dark:border-[#39518f] dark:hover:text-[#C3D7FC]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
           ].join(' ')}
         >
           Back
@@ -828,9 +827,9 @@ function Step2({
           type="button"
           onClick={onNext}
           className={[
-            'rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white transition-colors',
-            'hover:bg-primary/90',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'rounded-xl bg-[#2875FB] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#2875FB]/20 transition-all',
+            'hover:-translate-y-0.5 hover:bg-[#1E3FB2]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
           ].join(' ')}
         >
           Review &amp; confirm
@@ -915,7 +914,7 @@ function Step3({
               {subjects.map(s => (
                 <span
                   key={s}
-                  className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary"
+                   className="inline-flex items-center rounded-full bg-[#C3D7FC]/60 px-2.5 py-0.5 text-xs font-medium text-[#1E3FB2] dark:bg-[#1E3FB2]/40 dark:text-[#C3D7FC]"
                 >
                   {s}
                 </span>
@@ -957,7 +956,7 @@ function Step3({
               {needsArray.map(need => (
                 <div key={need} className="flex items-center gap-2">
                   {need === primaryNeed && (
-                    <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-medium text-white">
+                    <span className="rounded-full bg-[#2875FB] px-2 py-0.5 text-xs font-medium text-white">
                       Primary
                     </span>
                   )}
@@ -1011,9 +1010,8 @@ function Step3({
           disabled={submitting}
           className={[
             'rounded-xl border border-black/10 px-6 py-3 text-sm font-medium text-text transition-colors',
-            'hover:border-primary/40 hover:text-primary',
-            'dark:border-white/15',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'hover:border-[#2875FB]/60 hover:text-[#1E3FB2] dark:border-[#39518f] dark:hover:text-[#C3D7FC]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
             submitting ? 'cursor-not-allowed opacity-50' : '',
           ].join(' ')}
         >
@@ -1025,9 +1023,9 @@ function Step3({
           disabled={submitting}
           whileTap={{ scale: submitting ? 1 : 0.97 }}
           className={[
-            'flex items-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-white transition-colors',
-            'hover:bg-primary/90',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+            'flex items-center gap-2 rounded-xl bg-[#2875FB] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-[#2875FB]/20 transition-all',
+            'hover:-translate-y-0.5 hover:bg-[#1E3FB2]',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
             submitting ? 'cursor-not-allowed opacity-80' : '',
           ].join(' ')}
         >
@@ -1078,16 +1076,16 @@ function SummarySection({
   editLabel: string
 }) {
   return (
-    <div className="rounded-xl border border-black/10 bg-surface p-5 dark:border-white/10">
+    <div className="rounded-2xl border border-[#C3D7FC] bg-white p-5 dark:border-[#39518f] dark:bg-[#07133F]">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="font-heading text-base font-semibold text-text">{title}</h2>
         <button
           type="button"
           onClick={onEdit}
           className={[
-            'text-xs font-medium text-primary underline underline-offset-2 transition-colors',
-            'hover:text-primary/70',
-            'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/60',
+             'text-xs font-medium text-[#1E3FB2] underline underline-offset-2 transition-colors dark:text-[#C3D7FC]',
+             'hover:text-[#2875FB] dark:hover:text-white',
+             'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#2875FB]/60',
           ].join(' ')}
         >
           {editLabel}
@@ -1118,7 +1116,7 @@ function SuccessMessage() {
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        className="flex h-16 w-16 items-center justify-center rounded-full bg-primary"
+        className="flex h-16 w-16 items-center justify-center rounded-full bg-[#2875FB] shadow-lg shadow-[#2875FB]/25"
       >
         <svg
           width="28"

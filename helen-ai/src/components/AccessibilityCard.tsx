@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import type { AccessibilityNeedType } from '@/types'
 
@@ -23,6 +24,17 @@ export function AccessibilityCard({
   selected,
   onToggle,
 }: AccessibilityCardProps) {
+  const [showHelp, setShowHelp] = useState(false)
+
+  function toggleHelp(event: React.MouseEvent<HTMLSpanElement> | React.KeyboardEvent<HTMLSpanElement>) {
+    event.stopPropagation()
+    if ('key' in event) {
+      if (event.key !== 'Enter' && event.key !== ' ') return
+      event.preventDefault()
+    }
+    setShowHelp(value => !value)
+  }
+
   return (
     <motion.button
       type="button"
@@ -34,23 +46,51 @@ export function AccessibilityCard({
       whileTap={{ scale: 0.97 }}
       transition={{ duration: 0.12, ease: 'easeOut' }}
       className={[
-        'group relative flex w-full flex-col items-start gap-1.5 rounded-2xl border p-4 text-left transition-colors duration-150',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+        'group relative flex w-full flex-col items-start gap-1.5 rounded-2xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5',
+        showHelp ? 'z-30' : '',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
         // Selected: filled green background, primary border.
         selected
-          ? 'border-primary bg-primary text-white shadow-sm shadow-primary/20'
-          : 'border-black/10 bg-surface text-text hover:border-primary/40 dark:border-white/15',
+          ? 'border-[#2875FB] bg-[#2875FB] text-white shadow-lg shadow-[#2875FB]/20'
+          : 'border-[#C3D7FC] bg-white text-[#030E50] hover:border-[#2875FB]/60 dark:border-[#39518f] dark:bg-[#07133F] dark:text-white',
       ].join(' ')}
     >
       {/* Icon + check row */}
       <div className="flex w-full items-start justify-between">
         <NeedIcon need={value} selected={selected} />
+        <span
+          tabIndex={0}
+          role="button"
+          aria-label={`What is ${label}?`}
+          aria-expanded={showHelp}
+          title={needHelpText(value)}
+          onClick={toggleHelp}
+          onKeyDown={toggleHelp}
+          className={[
+            'absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border text-[11px] font-bold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-[#2875FB]',
+            showHelp
+              ? 'border-[#2875FB] bg-[#2875FB] text-white dark:border-[#C3D7FC] dark:bg-[#1E3FB2]'
+              : 'border-[#1E3FB2]/50 text-[#1E3FB2] hover:bg-[#C3D7FC] focus-visible:bg-[#C3D7FC] dark:border-[#C3D7FC]/60 dark:text-[#C3D7FC] dark:hover:bg-[#1E3FB2]',
+          ].join(' ')}
+        >
+          ?
+          {showHelp && (
+            <span
+              role="status"
+              onClick={event => event.stopPropagation()}
+              className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-56 rounded-xl border border-[#C3D7FC] bg-white p-3 text-left text-[11px] font-normal leading-relaxed text-[#030E50] shadow-[0_14px_30px_rgba(3,14,80,0.2)] dark:border-[#35518B] dark:bg-[#132653] dark:text-[#EEF3FF]"
+            >
+              <span className="mb-1 block text-xs font-bold text-[#1E3FB2] dark:text-[#C3D7FC]">About {label}</span>
+              {needHelpText(value)}
+            </span>
+          )}
+        </span>
         {selected && (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-white/30"
+            className="absolute right-10 top-3 flex h-5 w-5 items-center justify-center rounded-full bg-white/30"
             aria-hidden
           >
             <svg
@@ -76,7 +116,7 @@ export function AccessibilityCard({
         <p
           className={[
             'text-xs leading-relaxed',
-            selected ? 'text-white/80' : 'text-text/55',
+             selected ? 'text-white/80' : 'text-[#63709A] dark:text-[#C3D7FC]/70',
           ].join(' ')}
         >
           {description}
@@ -91,6 +131,20 @@ export function AccessibilityCard({
 // more than literal accuracy here.
 // ---------------------------------------------------------------------------
 
+function needHelpText(need: AccessibilityNeedType): string {
+  const descriptions: Partial<Record<AccessibilityNeedType, string>> = {
+    dyslexia: 'A reading difference that can affect spelling, reading speed, and decoding.',
+    adhd: 'Attention differences can affect focus, planning, and managing distractions.',
+    autism_spectrum: 'Autism can affect communication, sensory experiences, and information processing.',
+    visual_impairment: 'Vision support can help when text, contrast, or visual details are difficult to see.',
+    hearing_impairment: 'Hearing support can help when spoken audio or sound cues are difficult to access.',
+    motor_impairment: 'Motor support can help when precise or repeated physical actions are difficult.',
+    other_learning_disability: 'Choose this when your learning support needs do not fit another option.',
+    learning_disability: 'A broad option for learning differences that need individual support.',
+  }
+  return descriptions[need] ?? 'Learn more about this support option.'
+}
+
 function NeedIcon({
   need,
   selected,
@@ -98,7 +152,7 @@ function NeedIcon({
   need: AccessibilityNeedType
   selected: boolean
 }) {
-  const color = selected ? 'text-white' : 'text-primary'
+  const color = selected ? 'text-white' : 'text-[#1E3FB2] dark:text-[#C3D7FC]'
 
   if (need === 'visual_impairment') {
     return (

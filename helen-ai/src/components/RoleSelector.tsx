@@ -28,17 +28,17 @@ export function RoleSelector({ value, onChange }: RoleSelectorProps) {
             aria-pressed={isSelected}
             title={r.description}
             className={[
-              'flex flex-1 flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 text-center transition-all duration-150',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+              'flex flex-1 flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 text-center transition-all duration-200 hover:-translate-y-0.5',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
               isSelected
                 ? [
-                    'border-primary bg-primary text-white',
-                    'shadow-sm shadow-primary/30',
+                    'border-[#2875FB] bg-[#2875FB] text-white',
+                    'shadow-lg shadow-[#2875FB]/20',
                   ].join(' ')
                 : [
-                    'border-black/10 bg-background text-text/70',
-                    'dark:border-white/15 dark:bg-transparent',
-                    'hover:border-primary/40 hover:text-text',
+                    'border-[#C3D7FC] bg-white text-[#63709A]',
+                    'dark:border-[#39518f] dark:bg-[#07133F] dark:text-[#C3D7FC]/80',
+                    'hover:border-[#2875FB]/60 hover:text-[#030E50] dark:hover:text-white',
                   ].join(' '),
             ].join(' ')}
           >

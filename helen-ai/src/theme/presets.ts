@@ -95,18 +95,18 @@ export const THEME_PRESETS: Record<ThemePresetName, ThemePreset> = {
   },
   adhd: {
     colors: {
-      background: "#F4F6FF",
-      surface: "#FFFFFF",
-      text: "#0B1020",
-      primary: "#1E2F9E",
-      accent: "#C8F169",
+      background: '#EEF4FC',
+      surface: '#FFFFFF',
+      text: '#0F172A',
+      primary: '#2563EB',
+      accent: '#05FF85',
     },
     darkColors: {
-      background: "#1E2F9E",
-      surface: "#26378F",
-      text: "#F4F6FF",
-      primary: "#C8F169",
-      accent: "#C8F169",
+      background: '#070D24',
+      surface: '#0E1A3C',
+      text: '#F4F8FF',
+      primary: '#05FF85',
+      accent: '#00E5FF',
     },
     font: {
       family: "'Lexend', system-ui, sans-serif",

@@ -4,6 +4,7 @@ import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { apiFetch } from '@/services/api'
 import { HelenMascot } from '@/components/adhd/HelenMascot'
+import { AdhdDecorations } from '@/components/adhd/AdhdDecorations'
 
 interface Message {
   text: string
@@ -88,7 +89,11 @@ export function AIAssistant() {
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    void sendMessage(input)
+    if (input.trim()) {
+      void sendMessage(input)
+    } else {
+      startVoiceInput()
+    }
   }
 
   function startVoiceInput() {
@@ -103,7 +108,13 @@ export function AIAssistant() {
     }
     const recognition = new Recognition()
     recognition.lang = navigator.language
-    recognition.onresult = event => setInput(previous => `${previous}${event.results[0]?.[0]?.transcript ?? ''}`.trim())
+    recognition.onresult = event => {
+      const transcript = event.results[0]?.[0]?.transcript ?? ''
+      setInput(transcript)
+      if (transcript.trim()) {
+        void sendMessage(transcript)
+      }
+    }
     recognition.onerror = () => {
       setListening(false)
       setError('Voice input stopped. You can type your question or try again.')
@@ -114,110 +125,134 @@ export function AIAssistant() {
     recognition.start()
   }
 
-  const quickActions = [
-    { label: 'Explain simpler', action: 'simpler' as const },
-    { label: 'Give an example', action: 'example' as const },
-    { label: 'One step at a time', action: 'one_step' as const },
-    ...(adhdEnabled ? [
-      { label: 'Break it down', action: 'break_down' as const },
-      { label: 'Just the key point', action: 'key_point' as const },
-      { label: 'Quiz me quickly', action: 'quick_quiz' as const },
-      { label: 'Help me start', action: 'help_start' as const },
-    ] : []),
+  const starters = [
+    { text: 'Explain this in simpler words', action: 'simpler' as const },
+    { text: 'Give me a real-world example', action: 'example' as const },
+    { text: 'Break this into small steps', action: 'break_down' as const },
+    { text: 'Help me get started', action: 'help_start' as const },
   ]
 
   return (
-    <div className="mx-auto flex min-h-[calc(100dvh-13rem)] w-full max-w-5xl flex-col gap-4 text-text lg:min-h-[calc(100dvh-9rem)]">
-      <header>
-        <h1 className="font-heading font-bold">AI learning tutor</h1>
-        <p className="mt-2 text-base text-muted">Ask in your own words. Spelling does not need to be perfect.</p>
-      </header>
+    <div className="relative min-h-[calc(100dvh-5rem)] w-full overflow-hidden text-slate-900 transition-colors duration-200 dark:text-white">
+      {/* Background 3D & Doodle Decorations */}
+      <AdhdDecorations />
 
-      {checkInReady && (
-        <p role="status" className="rounded-lg border border-primary/25 bg-primary/5 p-4 text-sm">
-          Ten minutes have passed. Would you like to check in, take a break, or keep going?
-          <button type="button" onClick={() => setCheckInReady(false)} className="ml-3 min-h-11 underline underline-offset-4">Dismiss</button>
-        </p>
-      )}
+      <div className="relative z-10 mx-auto flex w-full max-w-md flex-col justify-between space-y-5 px-1 py-3 sm:px-0">
+        {/* Top Header matching Screen 2 */}
+        <header className="text-center">
+          <p className="text-sm font-semibold tracking-wide text-slate-500 dark:text-[#8E9EC5]">
+            Ask in your own words.
+          </p>
+        </header>
 
-      <section aria-label="Tutor conversation" className="flex min-h-[30rem] flex-1 flex-col rounded-2xl border border-text/20 bg-surface p-4 sm:p-6">
-        <div aria-live="polite" aria-relevant="additions" className="mb-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg bg-background p-4">
-          {messages.length === 0 ? (
-            <div className="flex min-h-full flex-col items-center justify-center gap-4 py-6 text-center">
-              <HelenMascot mood="happy" className="h-24 w-20 text-primary" />
-              <div>
-                <p className="font-display text-xl font-semibold">Hi, I’m Helen!</p>
-                <p className="mt-1 max-w-lg text-muted">Choose a starter or ask me anything. We can take it one small step at a time.</p>
-              </div>
-              <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
-                {[
-                  { text: 'Explain this in simpler words', action: 'simpler' as const },
-                  { text: 'Give me a real-world example', action: 'example' as const },
-                  { text: 'Break this into small steps', action: 'break_down' as const },
-                  { text: 'Help me get started', action: 'help_start' as const },
-                ].map(prompt => (
-                  <button
-                    key={prompt.text}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => void sendMessage(prompt.text, prompt.action)}
-                    className="min-h-11 rounded-xl border border-text/70 bg-surface-2 px-4 py-3 text-left font-medium text-text hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait"
-                  >
-                    {prompt.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : messages.map((message, index) => (
-            <div key={`${index}-${message.sender}`} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[90%] whitespace-pre-wrap rounded-lg px-4 py-3 ${message.sender === 'user' ? 'bg-primary/10 text-text' : 'bg-text/10 text-text'}`}>
-                <p>{message.text}</p>
-                {message.sender === 'ai' && speech.supported && preferences.tts.enabled && (
-                  <button type="button" onClick={() => speech.speakSegments(message.text.split(/(?<=[.!?])\s+/))} aria-label="Read tutor answer aloud" className="mt-2 min-h-10 rounded-md px-2 text-sm font-semibold text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
-                    {speech.isSpeaking ? 'Read answer aloud' : 'Listen to answer'}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-          {loading && <p role="status" className="text-sm text-muted">Your tutor is thinking…</p>}
-        </div>
-
-        {error && <p role="alert" className="mb-3 rounded-md border border-text/20 bg-background p-3 text-sm">{error}</p>}
-
-        <form onSubmit={submit} className="flex shrink-0 flex-col gap-2 sm:flex-row">
-          <label htmlFor="tutor-message" className="sr-only">Your question for the tutor</label>
-          <input
-            id="tutor-message"
-            type="text"
-            value={input}
-            onChange={event => setInput(event.target.value)}
-            placeholder="Ask anything…"
-            maxLength={4000}
-            className="min-h-12 min-w-0 flex-1 rounded-lg border border-text/50 bg-background px-4 py-2 placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
-          />
-          <button type="button" onClick={startVoiceInput} disabled={listening || loading} aria-label={listening ? 'Listening for your question' : 'Speak your question'} className="min-h-12 rounded-lg border border-primary px-4 py-2 font-semibold text-primary disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted">
-            {listening ? 'Listening…' : 'Speak'}
-          </button>
-          <button type="submit" disabled={loading || !input.trim()} className="min-h-12 rounded-lg bg-primary px-5 py-2 font-semibold text-white hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted">Send</button>
-        </form>
-        {messages.length > 0 && <div className="mt-3 flex shrink-0 flex-wrap gap-2" aria-label="Tutor follow-up prompts">
-          {quickActions.map(item => (
-            <button key={item.action} type="button" disabled={loading} onClick={() => void sendMessage(item.label, item.action)} className="min-h-11 rounded-full border border-text/70 bg-surface-2 px-3 py-2 text-sm text-text hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait">
-              {item.label}
+        {checkInReady && (
+          <div role="status" className="rounded-2xl border border-blue-400/30 bg-blue-50/80 p-4 text-sm dark:bg-[#0E1A3C]">
+            <p>Ten minutes have passed. Would you like to check in, take a break, or keep going?</p>
+            <button
+              type="button"
+              onClick={() => setCheckInReady(false)}
+              className="mt-2 text-xs font-bold text-[#2563EB] underline dark:text-[#05FF85]"
+            >
+              Dismiss
             </button>
-          ))}
-        </div>}
-        {adhdEnabled && attentionPreferences.accountability_prompts && (
-          <label className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm">
-            <input type="checkbox" checked={checkInEnabled} onChange={event => {
-              setCheckInEnabled(event.target.checked)
-              setCheckInReady(false)
-            }} className="accent-primary" />
-            Ask me to check in after 10 minutes
-          </label>
+          </div>
         )}
-      </section>
+
+        {/* Conversation or Hero Mascot Screen matching Screen 2 */}
+        {messages.length === 0 ? (
+          <div className="my-auto flex flex-col items-center justify-center space-y-6 text-center">
+            {/* Cute 3D Helen Mascot with glowing aura */}
+            <HelenMascot mood="happy" className="h-44 w-36" waving={true} />
+
+            <div className="space-y-1.5">
+              <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+                Hi, I’m Helen!
+              </h1>
+              <p className="max-w-xs text-sm font-medium text-slate-500 dark:text-[#8E9EC5]">
+                Choose a starter or ask me anything. We can take it one small step at a time.
+              </p>
+            </div>
+
+            {/* Stacked Starter Buttons matching Screen 2 */}
+            <div className="w-full space-y-2.5">
+              {starters.map(item => (
+                <button
+                  key={item.text}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => void sendMessage(item.text, item.action)}
+                  className="flex min-h-12 w-full items-center justify-center rounded-2xl border border-transparent bg-[#E8EEFF] px-4 py-3 text-center text-sm font-semibold text-slate-800 transition-all hover:bg-[#DCE6FF] hover:scale-[1.01] active:scale-[0.99] dark:border-blue-400/25 dark:bg-[#0D183A] dark:text-white dark:hover:bg-[#13224E] dark:hover:border-blue-400/40"
+                >
+                  {item.text}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="my-auto max-h-[50vh] space-y-3 overflow-y-auto rounded-3xl border border-blue-500/15 bg-white/90 p-4 shadow-sm backdrop-blur-sm dark:border-white/10 dark:bg-[#0E1A3C]/90">
+            {messages.map((msg, i) => (
+              <div
+                key={`${i}-${msg.sender}`}
+                className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm font-medium leading-relaxed ${
+                    msg.sender === 'user'
+                      ? 'bg-[#2563EB] text-white dark:bg-[#05FF85] dark:text-[#060B1E] dark:font-semibold'
+                      : 'bg-slate-100 text-slate-800 dark:bg-[#142350] dark:text-slate-100'
+                  }`}
+                >
+                  <p>{msg.text}</p>
+                  {msg.sender === 'ai' && speech.supported && preferences.tts.enabled && (
+                    <button
+                      type="button"
+                      onClick={() => speech.speakSegments(msg.text.split(/(?<=[.!?])\s+/))}
+                      className="mt-2 text-xs font-bold underline opacity-80"
+                    >
+                      {speech.isSpeaking ? 'Reading…' : 'Listen'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+            {loading && (
+              <p className="text-center text-xs text-slate-400 dark:text-[#8E9EC5]">
+                Helen is thinking…
+              </p>
+            )}
+          </div>
+        )}
+
+        {error && (
+          <p role="alert" className="text-center text-xs text-rose-400">
+            {error}
+          </p>
+        )}
+
+        {/* Input & Speak Button matching Screen 2 */}
+        <form onSubmit={submit} className="space-y-3 pt-2">
+          <label htmlFor="tutor-message" className="sr-only">Ask anything</label>
+          <div className="relative">
+            <input
+              id="tutor-message"
+              type="text"
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              placeholder="Ask anything…"
+              className="min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-[#0E1A3C] dark:text-white dark:placeholder:text-[#8E9EC5]"
+            />
+          </div>
+
+          {/* Big Action Button: "Speak" matching UI */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="adhd-glow-btn flex min-h-12 w-full items-center justify-center rounded-2xl text-base font-bold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            {input.trim() ? (loading ? 'Thinking…' : 'Send') : (listening ? 'Listening…' : 'Speak')}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

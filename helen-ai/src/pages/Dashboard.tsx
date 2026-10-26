@@ -368,7 +368,7 @@ export function Dashboard() {
     return <Navigate to="/auth" replace />
   }
 
-  if (profile?.role === 'student' && activeDisabilityPreset === 'adhd') {
+  if (profile?.role === 'student' && (activeDisabilityPreset === 'adhd' || adhdEnabled)) {
     return <AdhdHome firstName={profile.full_name?.split(' ')[0] ?? 'there'} />
   }
 

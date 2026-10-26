@@ -1,16 +1,17 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useTheme } from '../context/ThemeContext'
 
 export function ThemeToggle({ className = '' }: { className?: string }) {
   const { theme, toggleTheme, hideThemeToggle } = useTheme()
   const [isAnimating, setIsAnimating] = useState(false)
+  const prefersReducedMotion = useReducedMotion()
 
   const handleClick = () => {
     if (!isAnimating) {
       setIsAnimating(true)
       toggleTheme()
-      setTimeout(() => setIsAnimating(false), 300)
+      setTimeout(() => setIsAnimating(false), prefersReducedMotion ? 0 : 300)
     }
   }
 
@@ -24,7 +25,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       <button
         onClick={handleClick}
         disabled={isAnimating || hideThemeToggle}
-        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-text/25 bg-surface text-text transition-colors hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
+        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-text/25 bg-surface text-text transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-100 ${className}`}
         aria-label={hideThemeToggle
           ? 'Optimized for visual accessibility'
           : isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -36,7 +37,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
               initial={{ rotate: -90, opacity: 0, scale: 0.5 }}
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
               exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: 'easeInOut' }}
               className="text-yellow-400"
             >
               <SunIcon />
@@ -47,8 +48,8 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
               initial={{ rotate: 90, opacity: 0, scale: 0.5 }}
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
               exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="text-gray-700"
+              transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: 'easeInOut' }}
+              className="text-text"
             >
               <MoonIcon />
             </motion.span>

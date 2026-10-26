@@ -1,13 +1,19 @@
 @import "tailwindcss";
 
 @theme {
+  --text-xs: 0.875rem;
   --color-background: #FAFAF7;
   --color-surface: #FFFFFF;
   --color-primary: #1B5E3F;
   --color-accent: #7ED957;
-  --color-text: #16261E;
-  --font-sans: 'Inter', system-ui, sans-serif;
-  --font-heading: 'Sora', serif;
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-surface-2: var(--surface-2);
+  --text: #16261E;
+  --text-muted: #48534D;
+  --surface-2: #E9ECE8;
+  --font-sans: 'Lexend', system-ui, sans-serif;
+  --font-heading: 'Fredoka', system-ui, sans-serif;
   --font-dyslexia: 'Atkinson Hyperlegible', 'Inter', system-ui, sans-serif;
   --font-display: var(--adhd-font-display);
   --font-adhd-body: var(--adhd-font-body);
@@ -31,7 +37,8 @@
    Theme CSS custom properties (updated by ThemeContext at runtime)
    --------------------------------------------------------------------------- */
 :root {
-  --font-family: 'Inter', system-ui, sans-serif;
+  --font-family: 'Lexend', system-ui, sans-serif;
+  --font-heading: 'Fredoka', system-ui, sans-serif;
   --font-size-multiplier: 1;
   --font-letter-spacing: 0;
   --font-line-height: 1.5;
@@ -72,27 +79,37 @@
 :root[data-theme="adhd"][data-mode="dark"] {
   --adhd-screen: #1E2F9E;
   --adhd-surface: #26378F;
-  --adhd-copy: #FFFFFF;
+  --adhd-copy: #F4F6FF;
   --adhd-future: #DFE3F3;
   --adhd-outline: #A8B5F2;
   --color-background: #1E2F9E;
   --color-surface: #26378F;
-  --color-text: #FFFFFF;
+  --color-text: #F4F6FF;
+  --color-text-muted: #C9D0F5;
+  --color-surface-2: #33469F;
+  --text: #F4F6FF;
+  --text-muted: #C9D0F5;
+  --surface-2: #33469F;
   --color-primary: #C8F169;
   --color-accent: #C8F169;
 }
 
 :root[data-theme="adhd"][data-mode="light"] {
-  --adhd-screen: #FFFFFF;
+  --adhd-screen: #F4F6FF;
   --adhd-surface: #FFFFFF;
   --adhd-copy: #0B1020;
   --adhd-future: #E9EAF0;
   --adhd-outline: #CBD0E0;
-  --color-background: #FFFFFF;
+  --color-background: #F4F6FF;
   --color-surface: #FFFFFF;
   --color-text: #0B1020;
   --color-primary: #1E2F9E;
   --color-accent: #C8F169;
+  --color-text-muted: #39445F;
+  --color-surface-2: #E8ECF8;
+  --text: #0B1020;
+  --text-muted: #39445F;
+  --surface-2: #E8ECF8;
 }
 
 :root[data-theme="adhd"] body {
@@ -262,29 +279,40 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-family);
+  font-family: var(--adhd-font-display) !important;
   font-weight: 700;
-  letter-spacing: var(--font-letter-spacing);
-  line-height: var(--font-line-height);
+  letter-spacing: normal !important;
+  line-height: 1.15 !important;
+  text-wrap: balance;
 }
 
-h1 { font-size: 2.5rem; }
-h2 { font-size: 2rem; }
+h1 { font-size: clamp(1.75rem, 2.5vw + 1rem, 2.75rem) !important; }
+h2 { font-size: clamp(1.375rem, 1.5vw + 1rem, 2rem) !important; }
 h3 { font-size: 1.5rem; }
 h4 { font-size: 1.25rem; }
 h5 { font-size: 1rem; }
 h6 { font-size: 0.875rem; }
 
 @media (min-width: 640px) {
-  h1 { font-size: 3rem; }
-  h2 { font-size: 2.25rem; }
   h3 { font-size: 1.75rem; }
 }
 
 @media (min-width: 1024px) {
-  h1 { font-size: 3.5rem; }
-  h2 { font-size: 2.5rem; }
   h3 { font-size: 2rem; }
+}
+
+body {
+  font-family: var(--font-family);
+}
+
+body :where([class*="text-text/"]) {
+  color: var(--color-text-muted) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-muted) !important;
+  opacity: 1 !important;
 }
 
 /* Preset layout flags use the same root attribute as the theme tokens. */
@@ -331,7 +359,7 @@ h6 { font-size: 0.875rem; }
 :root[data-forces-own-contrast="true"] body :where(.bg-primary, .bg-primary *) {
   color: #000000 !important;
 }
-:root.dark:not([data-forces-own-contrast="true"]) body :where(.bg-primary, .bg-primary *) {
+:root.dark:not([data-forces-own-contrast="true"]) body :where(.bg-primary:not(:disabled), .bg-primary:not(:disabled) *) {
   color: #0B120D !important;
 }
 :root[data-forces-own-contrast="true"] input::placeholder,

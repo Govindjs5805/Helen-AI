@@ -3,6 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { apiFetch } from '@/services/api'
+import { HelenMascot } from '@/components/adhd/HelenMascot'
 
 interface Message {
   text: string
@@ -126,10 +127,10 @@ export function AIAssistant() {
   ]
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 text-text">
+    <div className="mx-auto flex min-h-[calc(100dvh-13rem)] w-full max-w-5xl flex-col gap-4 text-text lg:min-h-[calc(100dvh-9rem)]">
       <header>
-        <h1 className="font-heading text-2xl font-bold">AI learning tutor</h1>
-        <p className="mt-2 text-text/70">Ask in your own words. Spelling does not need to be perfect.</p>
+        <h1 className="font-heading font-bold">AI learning tutor</h1>
+        <p className="mt-2 text-base text-muted">Ask in your own words. Spelling does not need to be perfect.</p>
       </header>
 
       {checkInReady && (
@@ -139,10 +140,34 @@ export function AIAssistant() {
         </p>
       )}
 
-      <section aria-label="Tutor conversation" className="rounded-2xl border border-black/10 bg-surface p-4 sm:p-6 dark:border-white/10">
-        <div aria-live="polite" aria-relevant="additions" className="mb-4 max-h-[60vh] min-h-48 space-y-3 overflow-y-auto rounded-lg bg-background p-4">
+      <section aria-label="Tutor conversation" className="flex min-h-[30rem] flex-1 flex-col rounded-2xl border border-text/20 bg-surface p-4 sm:p-6">
+        <div aria-live="polite" aria-relevant="additions" className="mb-4 min-h-0 flex-1 space-y-3 overflow-y-auto rounded-lg bg-background p-4">
           {messages.length === 0 ? (
-            <p className="text-text/70">Start with a question, topic, or homework problem. Your tutor can explain it in smaller steps.</p>
+            <div className="flex min-h-full flex-col items-center justify-center gap-4 py-6 text-center">
+              <HelenMascot mood="happy" className="h-24 w-20 text-primary" />
+              <div>
+                <p className="font-display text-xl font-semibold">Hi, I’m Helen!</p>
+                <p className="mt-1 max-w-lg text-muted">Choose a starter or ask me anything. We can take it one small step at a time.</p>
+              </div>
+              <div className="grid w-full max-w-2xl gap-3 sm:grid-cols-2">
+                {[
+                  { text: 'Explain this in simpler words', action: 'simpler' as const },
+                  { text: 'Give me a real-world example', action: 'example' as const },
+                  { text: 'Break this into small steps', action: 'break_down' as const },
+                  { text: 'Help me get started', action: 'help_start' as const },
+                ].map(prompt => (
+                  <button
+                    key={prompt.text}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => void sendMessage(prompt.text, prompt.action)}
+                    className="min-h-11 rounded-xl border border-text/70 bg-surface-2 px-4 py-3 text-left font-medium text-text hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait"
+                  >
+                    {prompt.text}
+                  </button>
+                ))}
+              </div>
+            </div>
           ) : messages.map((message, index) => (
             <div key={`${index}-${message.sender}`} className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[90%] whitespace-pre-wrap rounded-lg px-4 py-3 ${message.sender === 'user' ? 'bg-primary/10 text-text' : 'bg-text/10 text-text'}`}>
@@ -155,12 +180,12 @@ export function AIAssistant() {
               </div>
             </div>
           ))}
-          {loading && <p role="status" className="text-sm text-text/70">Your tutor is thinking…</p>}
+          {loading && <p role="status" className="text-sm text-muted">Your tutor is thinking…</p>}
         </div>
 
         {error && <p role="alert" className="mb-3 rounded-md border border-text/20 bg-background p-3 text-sm">{error}</p>}
 
-        <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
+        <form onSubmit={submit} className="flex shrink-0 flex-col gap-2 sm:flex-row">
           <label htmlFor="tutor-message" className="sr-only">Your question for the tutor</label>
           <input
             id="tutor-message"
@@ -169,20 +194,20 @@ export function AIAssistant() {
             onChange={event => setInput(event.target.value)}
             placeholder="Ask anything…"
             maxLength={4000}
-            className="min-h-12 min-w-0 flex-1 rounded-lg border border-black/10 bg-background px-4 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 dark:border-white/10"
+            className="min-h-12 min-w-0 flex-1 rounded-lg border border-text/50 bg-background px-4 py-2 placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70"
           />
-          <button type="button" onClick={startVoiceInput} disabled={listening || loading} aria-label={listening ? 'Listening for your question' : 'Speak your question'} className="min-h-12 rounded-lg border border-primary px-4 py-2 font-semibold text-primary disabled:opacity-60">
+          <button type="button" onClick={startVoiceInput} disabled={listening || loading} aria-label={listening ? 'Listening for your question' : 'Speak your question'} className="min-h-12 rounded-lg border border-primary px-4 py-2 font-semibold text-primary disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted">
             {listening ? 'Listening…' : 'Speak'}
           </button>
-          <button type="submit" disabled={loading || !input.trim()} className="min-h-12 rounded-lg bg-primary px-5 py-2 font-semibold text-white hover:bg-primary/90 disabled:opacity-60">Send</button>
+          <button type="submit" disabled={loading || !input.trim()} className="min-h-12 rounded-lg bg-primary px-5 py-2 font-semibold text-white hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted">Send</button>
         </form>
-        <div className="mt-3 flex flex-wrap gap-2" aria-label="Tutor follow-up prompts">
+        {messages.length > 0 && <div className="mt-3 flex shrink-0 flex-wrap gap-2" aria-label="Tutor follow-up prompts">
           {quickActions.map(item => (
-            <button key={item.action} type="button" disabled={loading || messages.length === 0} onClick={() => void sendMessage(item.label, item.action)} className="min-h-10 rounded-full border border-text/20 px-3 py-2 text-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50">
+            <button key={item.action} type="button" disabled={loading} onClick={() => void sendMessage(item.label, item.action)} className="min-h-11 rounded-full border border-text/70 bg-surface-2 px-3 py-2 text-sm text-text hover:border-primary hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait">
               {item.label}
             </button>
           ))}
-        </div>
+        </div>}
         {adhdEnabled && attentionPreferences.accountability_prompts && (
           <label className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm">
             <input type="checkbox" checked={checkInEnabled} onChange={event => {
@@ -193,6 +218,6 @@ export function AIAssistant() {
           </label>
         )}
       </section>
-    </main>
+    </div>
   )
 }

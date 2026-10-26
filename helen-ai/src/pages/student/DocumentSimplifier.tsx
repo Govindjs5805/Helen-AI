@@ -173,9 +173,10 @@ function previewDocument(preset: string): DocumentRecord {
   }
 }
 
-export function DocumentSimplifier({ preview = false, initialOutputType = 'simplified_text' }: {
+export function DocumentSimplifier({ preview = false, initialOutputType = 'simplified_text', embedded = false }: {
   preview?: boolean
   initialOutputType?: SimplificationOutput
+  embedded?: boolean
 }) {
   const navigate = useNavigate()
   const { session } = useAuth()
@@ -699,24 +700,26 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
 
   return (
     <div className="mx-auto w-full max-w-6xl space-y-8 text-text">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold text-primary">DOCUMENT SIMPLIFIER</p>
-          <h1 className="mt-1 font-heading text-3xl font-bold text-text">Make a document easier to work with</h1>
-          <p className="mt-2 max-w-2xl text-sm text-text/70">Your text is adapted to your primary learning profile. Only you can access your document content.</p>
-        </div>
-        <p className="rounded-md border border-text/20 bg-surface px-3 py-2 text-sm text-text">
-          Adaptation: <strong>{presetLabels[preset]}</strong>
-        </p>
-      </header>
+      {!embedded && (
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-primary">DOCUMENT SIMPLIFIER</p>
+            <h1 className="mt-1 font-heading font-bold text-text">Your documents</h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted">Your text is adapted to your primary learning profile. Only you can access your document content.</p>
+          </div>
+          <p className="shrink-0 self-start rounded-md border border-text/20 bg-surface px-3 py-2 text-sm text-text">
+            Adaptation: <strong>{presetLabels[preset]}</strong>
+          </p>
+        </header>
+      )}
 
-      <section className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(17rem,0.6fr)]">
-        <div className="min-w-0 space-y-5 rounded-lg border border-text/15 bg-surface p-4 sm:p-6">
+      <section className="grid min-w-0 grid-cols-1 items-stretch gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(17rem,0.6fr)]">
+        <div className="flex min-w-0 flex-col space-y-5 rounded-lg border border-text/15 bg-surface p-4 sm:p-6">
           <div>
             <h2 className="font-heading text-xl font-semibold text-text">Add a document</h2>
-            <p className="mt-1 text-sm text-text/70">{presetDescription[preset]}</p>
+            <p className="mt-1 text-sm text-muted">{presetDescription[preset]}</p>
           </div>
-          {preview && <p className="rounded-md border border-text/15 bg-background p-3 text-sm text-text/70">Visual preview only. Upload controls are disabled.</p>}
+          {preview && <p className="rounded-md border border-text/15 bg-background p-3 text-sm text-muted">Visual preview only. Upload controls are disabled.</p>}
 
           <form onSubmit={upload} className="space-y-4">
             <fieldset disabled={preview} className="space-y-4 disabled:opacity-75">
@@ -731,7 +734,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
               className={`rounded-lg border-2 border-dashed p-5 text-center transition-colors sm:p-8 ${isDragging ? 'border-primary bg-primary/10' : 'border-text/25 bg-background'}`}
             >
               <p className="font-medium text-text">Drop a file here</p>
-              <p className="mt-1 text-sm text-text/70">PDF, image, or plain text</p>
+              <p className="mt-1 text-sm text-muted">PDF, image, or plain text</p>
               <label
                 htmlFor="document-file"
                 className="mt-4 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/10 focus-within:ring-2 focus-within:ring-primary"
@@ -758,7 +761,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
                 {pasteMode ? 'Use a file instead' : 'Paste text instead'}
               </button>
               {selectedFile && !pasteMode && (
-                <button type="button" onClick={() => setSelectedFile(null)} className="min-h-10 px-2 text-sm text-text/70 underline underline-offset-4">
+                <button type="button" onClick={() => setSelectedFile(null)} className="min-h-11 px-2 text-sm text-muted underline underline-offset-4">
                   Remove file
                 </button>
               )}
@@ -774,20 +777,20 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
                   rows={7}
                   maxLength={250000}
                   placeholder="Paste a passage, lesson, or assignment here…"
-                  className="w-full resize-y rounded-md border border-text/25 bg-background p-3 font-normal text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="w-full resize-y rounded-md border border-text/25 bg-background p-3 font-normal text-text placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 />
               </label>
             )}
 
             <label htmlFor="document-title" className="block space-y-1.5 text-sm font-medium text-text">
-              <span>Title <span className="font-normal text-text/60">(optional)</span></span>
+              <span>Title <span className="font-normal text-muted">(optional)</span></span>
               <input
                 id="document-title"
                 value={title}
                 onChange={event => setTitle(event.target.value)}
                 maxLength={180}
                 placeholder="For example, Chapter 4 notes"
-                className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               />
             </label>
 
@@ -803,7 +806,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
               </select>
             </label>
             <label htmlFor="preserve-terms" className="block space-y-1.5 text-sm font-medium text-text">
-              <span>Keep important terms <span className="font-normal text-text/60">(optional, comma-separated)</span></span>
+              <span>Keep important terms <span className="font-normal text-muted">(optional, comma-separated)</span></span>
               <input id="preserve-terms" value={preserveTerms} onChange={event => setPreserveTerms(event.target.value)} maxLength={1000} placeholder="For example, photosynthesis, chlorophyll" className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2" />
             </label>
             <label htmlFor="max-sentence-length" className="block space-y-1.5 text-sm font-medium text-text">
@@ -845,7 +848,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
           )}
         </div>
 
-        <aside className="min-w-0 space-y-3 rounded-lg border border-text/15 bg-surface p-4 sm:p-5" aria-labelledby="document-history-heading">
+        <aside className="h-full min-w-0 space-y-3 rounded-lg border border-text/15 bg-surface p-4 sm:p-5" aria-labelledby="document-history-heading">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="document-history-heading" className="min-w-0 break-words font-heading text-lg font-semibold text-text">Your documents</h2>
             <button type="button" onClick={() => void loadHistory()} className="min-h-10 px-2 text-sm font-medium text-primary underline underline-offset-4">
@@ -853,11 +856,11 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
             </button>
           </div>
           {historyLoading ? (
-            <p role="status" className="text-sm text-text/70">Loading document history…</p>
+            <p role="status" className="text-sm text-muted">Loading document history…</p>
           ) : historyError ? (
             <p role="alert" className="text-sm text-text">{historyError}</p>
           ) : history.length === 0 ? (
-            <p className="rounded-md border border-text/15 bg-background p-4 text-sm text-text/70">Your saved documents will appear here.</p>
+            <p className="rounded-md border border-text/15 bg-background p-4 text-sm text-muted">Your saved documents will appear here.</p>
           ) : (
             <ul aria-label="Document history" tabIndex={0} className="max-h-[26rem] space-y-2 overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
               {history.map(document => (
@@ -868,7 +871,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
                     className={`w-full rounded-md border p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${currentDocument?.id === document.id ? 'border-primary bg-primary/10' : 'border-text/15 bg-background hover:border-primary/50'}`}
                   >
                     <span className="block break-words text-sm font-semibold text-text">{document.title}</span>
-                    <span className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-text/70">
+                    <span className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
                       <span>{formatDate(document.created_at)}</span>
                       <span className="capitalize">{document.status}</span>
                     </span>
@@ -885,7 +888,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h2 id="document-result-heading" className="font-heading text-2xl font-bold text-text">{currentDocument.title}</h2>
-              <p className="mt-1 text-sm text-text/70">Status: <span className="capitalize">{currentDocument.status}</span></p>
+              <p className="mt-1 text-sm text-muted">Status: <span className="capitalize">{currentDocument.status}</span></p>
             </div>
             {simplifiedText && (
               <div className="flex flex-wrap gap-2">
@@ -928,7 +931,7 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
                   </button>
                   {speech.isSpeaking && <button type="button" onClick={() => { speech.stop(); setReadAlong(false) }} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm">Stop</button>}
                 </>
-              ) : <span role="status" className="text-sm text-text/70">{preferences.tts.enabled ? 'Audio is unavailable in this browser.' : 'Text-to-speech is turned off in your reading profile.'}</span>}
+              ) : <span role="status" className="text-sm text-muted">{preferences.tts.enabled ? 'Audio is unavailable in this browser.' : 'Text-to-speech is turned off in your reading profile.'}</span>}
               <button type="button" onClick={() => setShowOriginal(value => !value)} aria-pressed={showOriginal} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{showOriginal ? 'Hide original' : 'Show original'}</button>
               <button type="button" onClick={() => updateReadingAid(rulerEnabled ? 'none' : 'ruler')} aria-pressed={rulerEnabled} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">{rulerEnabled ? 'Turn off ruler' : 'Reading ruler'}</button>
               <button type="button" onClick={() => changeTextSize(-5)} aria-label="Decrease reading text size" className="min-h-11 min-w-11 rounded-md border border-text/25 px-3 text-lg">A−</button>

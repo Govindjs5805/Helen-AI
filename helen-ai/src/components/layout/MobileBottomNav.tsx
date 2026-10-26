@@ -2,16 +2,18 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { LogoutButton } from '@/components/LogoutButton'
+import { BookOpen, Timer } from 'lucide-react'
 
 const NAV_ITEMS = {
   student: [
     { href: '/dashboard', label: 'Home', icon: HomeIcon },
-    { href: '/ai-assistant', label: 'AI', icon: AssistantIcon },
-    { href: '/documents', label: 'Docs', icon: DocumentsIcon },
-    { href: '/notes', label: 'Notes', icon: NotesIcon },
-    { href: '/planner', label: 'Plan', icon: NotesIcon },
-    { href: '/focus', label: 'Focus', icon: ProgressIcon },
-    { href: '/progress', label: 'More', icon: ProgressIcon },
+    { href: '/ai-assistant', label: 'Assistant', icon: AssistantIcon },
+    { href: '/documents', label: 'Documents', icon: DocumentsIcon },
+    { href: '/focus', label: 'Focus', icon: Timer },
+    { href: '/homework', label: 'Homework help', icon: BookOpen },
+    { href: '/notes', label: 'Notes & Quizzes', icon: NotesIcon },
+    { href: '/planner', label: 'Daily planner', icon: NotesIcon },
+    { href: '/progress', label: 'Progress', icon: ProgressIcon },
   ],
   teacher: [
     { href: '/dashboard', label: 'Home', icon: HomeIcon },
@@ -181,16 +183,16 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
             <Link
               key={item.href}
               to={item.href}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+              className={`flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
                 isActive
                   ? 'bg-primary/10 text-primary'
-                  : 'text-text/60 hover:text-text'
+                  : 'text-text hover:bg-text/10'
               }`}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <item.icon className="h-5 w-5" aria-hidden="true" />
+              <span className="text-center text-sm font-medium leading-tight">{item.label}</span>
             </Link>
           )
         })}
@@ -200,15 +202,15 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
             <button
               type="button"
               onClick={() => setMoreOpen(open => !open)}
-              className="flex flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-text/60 hover:text-text transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+              className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1.5 text-text transition-colors hover:bg-text/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
               aria-label="More navigation items"
               aria-haspopup="true"
               aria-expanded={moreOpen}
             >
               <OverflowIcon className="h-5 w-5" />
-              <span className="text-[10px] font-medium">More</span>
+              <span className="text-sm font-medium">More</span>
             </button>
-            {moreOpen && <div className="absolute bottom-full left-1/2 z-50 mb-2 max-h-[60dvh] w-48 -translate-x-1/2 overflow-y-auto rounded-xl border border-black/10 bg-surface p-2 shadow-lg dark:border-white/10">
+            {moreOpen && <div className="absolute bottom-full left-1/2 z-50 mb-2 max-h-[60dvh] w-56 -translate-x-1/2 overflow-y-auto rounded-xl border border-black/10 bg-surface p-2 shadow-lg dark:border-white/10">
               {overflow.map(item => {
                 const isActive = activeHref === item.href
                 return (
@@ -216,7 +218,7 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
                     key={item.href}
                     to={item.href}
                     onClick={() => setMoreOpen(false)}
-                    className={`block rounded-md px-3 py-2 text-sm ${
+                    className={`flex min-h-11 items-center rounded-md px-3 py-2 text-sm ${
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-text hover:bg-text/10'
@@ -227,12 +229,12 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
                   </Link>
                 )
               })}
+              <div className="mt-2 border-t border-text/15 pt-2">
+                <LogoutButton />
+              </div>
             </div>}
           </div>
         )}
-        <div className="flex-1">
-          <LogoutButton compact />
-        </div>
       </div>
     </nav>
   )

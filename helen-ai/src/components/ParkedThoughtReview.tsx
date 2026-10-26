@@ -9,7 +9,7 @@ interface ParkedThought {
   created_at: string
 }
 
-export function ParkedThoughtReview() {
+export function ParkedThoughtReview({ compact = false }: { compact?: boolean }) {
   const { session } = useAuth()
   const [thoughts, setThoughts] = useState<ParkedThought[]>([])
   const [error, setError] = useState('')
@@ -41,15 +41,16 @@ export function ParkedThoughtReview() {
   }
 
   const due = thoughts.filter(thought => !thought.reviewed_at)
+  const visibleThoughts = compact ? due.slice(0, 3) : due
   return (
     <section className="rounded-xl border border-text/15 bg-surface p-5" aria-labelledby="parked-thoughts-heading">
-      <h2 id="parked-thoughts-heading" className="font-heading text-xl font-semibold">Thoughts to revisit</h2>
-      <p className="mt-1 text-sm text-text/70">Ideas you parked stay here until you decide what to do with them.</p>
+      <h2 id="parked-thoughts-heading" className="font-heading text-xl font-semibold">{compact ? 'Park a thought' : 'Thoughts to revisit'}</h2>
+      <p className="mt-1 text-sm text-muted">{compact ? 'Recent ideas you saved for later.' : 'Ideas you parked stay here until you decide what to do with them.'}</p>
       {loading && <p role="status" className="mt-3 text-sm">Loading saved thoughts…</p>}
       {error && <p role="alert" className="mt-3 text-sm">{error}</p>}
-      {!loading && due.length === 0 && <p className="mt-3 text-sm text-text/70">Nothing waiting for review right now.</p>}
+      {!loading && due.length === 0 && <p className="mt-3 text-sm text-muted">Nothing waiting for review right now.</p>}
       <ul className="mt-3 space-y-2">
-        {due.map(thought => (
+        {visibleThoughts.map(thought => (
           <li key={thought.id} className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-text/10 bg-background p-3">
             <p className="min-w-0 flex-1 text-sm">{thought.content}</p>
             <button type="button" onClick={() => void review(thought.id)} className="min-h-11 rounded-md border border-primary px-3 py-2 text-sm font-semibold text-primary">Mark reviewed</button>

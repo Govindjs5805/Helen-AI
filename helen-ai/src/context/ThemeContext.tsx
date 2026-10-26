@@ -41,9 +41,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('theme')
       if (stored === 'light' || stored === 'dark') return stored
-      return window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light'
+      return 'dark'
     }
     return 'light'
   })
@@ -163,6 +161,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     if (typeof window !== 'undefined') {
       const root = document.documentElement
+      const isDarkMode = theme === 'dark'
+      const isAdhdTheme = activeDisabilityPreset === 'adhd'
+      const foreground = isAdhdTheme
+        ? isDarkMode ? '#F4F6FF' : '#0B1020'
+        : tokens.colors.text
+      const muted = isAdhdTheme
+        ? isDarkMode ? '#C9D0F5' : '#39445F'
+        : tokens.layout.forcesOwnContrast
+          ? tokens.colors.text
+          : isDarkMode ? '#C9D0F5' : '#48534D'
+      const secondarySurface = isDarkMode
+        ? isAdhdTheme ? '#33469F' : '#1A241D'
+        : isAdhdTheme ? '#E8ECF8' : '#E9ECE8'
+
       root.setAttribute('data-profile', slug)
       root.setAttribute('data-theme', activeDisabilityPreset === 'adhd' ? 'adhd' : theme)
       root.setAttribute('data-mode', theme)
@@ -171,6 +183,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       Object.entries(tokens.colors).forEach(([key, value]) => {
         root.style.setProperty(`--color-${key}`, value)
       })
+      root.style.setProperty('--text', foreground)
+      root.style.setProperty('--text-muted', muted)
+      root.style.setProperty('--surface-2', secondarySurface)
+      root.style.setProperty('--color-text', foreground)
+      root.style.setProperty('--color-text-muted', muted)
+      root.style.setProperty('--color-surface-2', secondarySurface)
 
       root.style.setProperty(
         '--font-family',
@@ -178,7 +196,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       )
       root.style.setProperty(
         '--font-heading',
-        activeDisabilityPreset === 'adhd' ? "'Fredoka', system-ui, sans-serif" : tokens.font.family
+        "'Fredoka', system-ui, sans-serif"
       )
       root.style.setProperty('--font-size-multiplier', tokens.font.sizeMultiplier.toString())
       root.style.setProperty('--font-letter-spacing', tokens.font.letterSpacing)

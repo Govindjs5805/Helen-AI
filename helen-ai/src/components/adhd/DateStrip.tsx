@@ -35,13 +35,13 @@ export function DateStrip() {
               aria-pressed={selectedDate}
               onClick={() => setSelected(date.toDateString())}
               className={[
-                'min-h-12 min-w-[4.5rem] rounded-full px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-adhd-navy focus-visible:ring-offset-2',
+                'min-h-12 min-w-[4.5rem] rounded-full px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                 todayDate
-                  ? 'bg-adhd-navy text-white'
+                  ? 'bg-primary text-white'
                   : pastDate
                     ? 'bg-adhd-lime text-adhd-ink'
                     : 'bg-adhd-future text-adhd-ink',
-                selectedDate && !todayDate ? 'ring-2 ring-adhd-navy ring-offset-2' : '',
+                selectedDate && !todayDate ? 'ring-2 ring-primary ring-offset-2' : '',
               ].join(' ')}
             >
               {label}

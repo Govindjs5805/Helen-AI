@@ -1,8 +1,19 @@
 import { Link, useLocation } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { LogoutButton } from '@/components/LogoutButton'
+import {
+  BookOpen,
+  Bot,
+  CalendarDays,
+  ChartNoAxesCombined,
+  Files,
+  House,
+  NotebookPen,
+  SlidersHorizontal,
+  Timer,
+} from 'lucide-react'
 
 // Local cn helper (no external utility dep needed)
 function cn(...classes: (string | boolean | undefined | null)[]): string {
@@ -11,15 +22,15 @@ function cn(...classes: (string | boolean | undefined | null)[]): string {
 
 const NAV_ITEMS = {
   student: [
-    { href: '/dashboard', label: 'Home', icon: HomeIcon },
-    { href: '/ai-assistant', label: 'AI Assistant', icon: AssistantIcon },
-    { href: '/documents', label: 'Documents', icon: DocumentsIcon },
-    { href: '/homework', label: 'Homework help', icon: DocumentsIcon },
-    { href: '/planner', label: 'Daily planner', icon: NotesIcon },
-    { href: '/focus', label: 'Focus mode', icon: ProgressIcon },
-    { href: '/notes', label: 'Notes & Quizzes', icon: NotesIcon },
-    { href: '/progress', label: 'Progress', icon: ProgressIcon },
-    { href: '/settings/reading', label: 'Accessibility settings', icon: NotesIcon },
+    { href: '/dashboard', label: 'Home', icon: House },
+    { href: '/ai-assistant', label: 'AI Assistant', icon: Bot },
+    { href: '/documents', label: 'Documents', icon: Files },
+    { href: '/homework', label: 'Homework help', icon: BookOpen },
+    { href: '/planner', label: 'Daily planner', icon: CalendarDays },
+    { href: '/focus', label: 'Focus mode', icon: Timer },
+    { href: '/notes', label: 'Notes & Quizzes', icon: NotebookPen },
+    { href: '/progress', label: 'Progress', icon: ChartNoAxesCombined },
+    { href: '/settings/reading', label: 'Accessibility settings', icon: SlidersHorizontal },
   ],
   teacher: [
     { href: '/dashboard', label: 'Home', icon: HomeIcon },
@@ -43,49 +54,6 @@ function HomeIcon({ className }: { className?: string }) {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
       <polyline points="9 22 9 12 15 12 15 22"/>
-    </svg>
-  )
-}
-
-function AssistantIcon({ className }: { className?: string }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M12 8V4H8"/>
-      <rect width="8" height="12" x="3" y="8" rx="2"/>
-      <circle cx="9" cy="13" r="1"/>
-      <circle cx="15" cy="13" r="1"/>
-      <path d="M9 15v2"/>
-      <path d="M15 15v2"/>
-      <path d="M10 10h4"/>
-    </svg>
-  )
-}
-
-function DocumentsIcon({ className }: { className?: string }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-      <polyline points="14 2 14 8 20 8"/>
-    </svg>
-  )
-}
-
-function NotesIcon({ className }: { className?: string }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8z"/>
-      <line x1="9" y1="9" x2="15" y2="9"/>
-      <line x1="9" y1="13" x2="15" y2="13"/>
-      <line x1="9" y1="17" x2="13" y2="17"/>
-    </svg>
-  )
-}
-
-function ProgressIcon({ className }: { className?: string }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-      <path d="M3 3v16a2 2 0 0 0 2 2h16"/>
-      <path d="M8 17l4-4 4 4 4-4"/>
     </svg>
   )
 }
@@ -168,6 +136,7 @@ function XIcon({ className }: { className?: string }) {
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { profile } = useAuth()
   const location = useLocation()
+  const prefersReducedMotion = useReducedMotion()
   const role = profile?.role || 'student'
   const items = NAV_ITEMS[role as keyof typeof NAV_ITEMS] || NAV_ITEMS.student
 
@@ -178,8 +147,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
   return (
     <aside
       className={cn(
-        'fixed inset-y-0 left-0 z-40 w-72 shrink-0 transform bg-surface border-r border-black/10 dark:border-white/10',
-        'transition-transform duration-300 ease-in-out',
+        'group/sidebar fixed inset-y-0 left-0 z-40 w-72 shrink-0 transform border-r border-black/10 bg-surface transition-[width,transform] duration-300 ease-in-out dark:border-white/10 md:w-16 md:group-hover/sidebar:w-72 md:group-focus-within/sidebar:w-72 lg:w-72',
         isOpen ? 'translate-x-0' : '-translate-x-full',
         'md:translate-x-0 md:static md:inset-auto'
       )}
@@ -187,12 +155,12 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
     >
       <div className="flex h-full flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex h-16 items-center justify-between border-b border-black/10 px-4 dark:border-white/10 md:justify-center">
+        <div className="flex h-16 items-center justify-between border-b border-black/10 px-4 dark:border-white/10 md:justify-center md:px-2 md:group-hover/sidebar:px-4 lg:justify-center lg:px-4">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
               <span className="font-heading text-base font-bold text-white">H</span>
             </div>
-            <span className="hidden font-heading text-lg font-semibold text-text md:block">Helen AI</span>
+            <span className="hidden font-heading text-lg font-semibold text-text md:group-hover/sidebar:block lg:block">Helen AI</span>
           </div>
           <button
             onClick={onClose}
@@ -204,7 +172,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </div>
 
         {/* Navigation items */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 md:px-2 md:group-hover/sidebar:px-4 lg:px-4">
           <ul className="space-y-1">
             <AnimatePresence mode="wait">
               {items.map((item, index) => {
@@ -214,15 +182,15 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 return (
                   <motion.li
                     key={item.href}
-                    initial={{ opacity: 0, x: -20 }}
+                    initial={prefersReducedMotion ? false : { opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
+                    transition={{ delay: prefersReducedMotion ? 0 : index * 0.05, duration: prefersReducedMotion ? 0 : 0.2 }}
                   >
                     <Link
                       to={item.href}
                       onClick={handleLinkClick}
                       className={cn(
-                        'group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium',
+                        'group relative flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium md:justify-center md:px-0 md:group-hover/sidebar:justify-start md:group-hover/sidebar:px-3 lg:justify-start lg:px-3',
                         'transition-all duration-200',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50',
                         isActive
@@ -230,6 +198,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                           : 'text-text/70 hover:bg-text/10 hover:text-text'
                       )}
                       aria-current={isActive ? 'page' : undefined}
+                      aria-label={item.label}
+                      title={item.label}
                     >
                       <item.icon
                         className={cn(
@@ -237,13 +207,13 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                           isActive ? 'text-primary' : 'text-text/60 group-hover:text-text'
                         )}
                       />
-                      <span className="truncate">{item.label}</span>
+                      <span className="hidden truncate md:group-hover/sidebar:inline lg:inline">{item.label}</span>
                       {isActive && (
                         <motion.div
                           layoutId="active-indicator"
                           className="absolute left-0 top-0 bottom-0 w-1 rounded-r-full bg-primary"
                           initial={false}
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                          transition={prefersReducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 500, damping: 30 }}
                         />
                       )}
                     </Link>
@@ -255,7 +225,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         </nav>
 
         {/* User info & theme toggle */}
-        <div className="border-t border-black/10 px-4 py-4 dark:border-white/10">
+        <div className="hidden border-t border-black/10 px-4 py-4 dark:border-white/10 md:group-hover/sidebar:block lg:block">
           <div className="mb-3 flex items-center gap-3">
             <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center">
               <span className="text-sm font-medium text-primary">

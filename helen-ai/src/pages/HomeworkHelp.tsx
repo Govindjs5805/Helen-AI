@@ -6,6 +6,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { TaskBreakdownPanel } from '@/components/TaskBreakdownPanel'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '@/services/api'
+import { useTheme } from '@/context/ThemeContext'
 
 interface Dictation {
   lang: string
@@ -17,6 +18,7 @@ type DictationConstructor = new () => Dictation
 
 export function HomeworkHelp() {
   const { session } = useAuth()
+  const { activeDisabilityPreset } = useTheme()
   const { preferences } = useReadingTheme()
   const speech = useTextToSpeech({ rate: preferences.tts.rate, voice: preferences.tts.voice })
   const [question, setQuestion] = useState('')
@@ -79,15 +81,20 @@ export function HomeworkHelp() {
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-8 text-text">
-      <header>
-        <p className="text-sm font-semibold text-primary">HOMEWORK SUPPORT</p>
-        <h1 className="mt-1 font-heading text-3xl font-bold">One step at a time</h1>
-        <p className="mt-2 max-w-2xl text-sm text-text/70">Read a worksheet as steps, or speak your own ideas and shape them into a draft you can edit.</p>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-primary">HOMEWORK SUPPORT</p>
+          <h1 className="mt-1 font-heading font-bold">Homework help</h1>
+          <p className="mt-2 max-w-2xl text-base text-muted">Read a worksheet as steps, or shape your own ideas into a draft you can edit.</p>
+        </div>
+        <p className="shrink-0 self-start rounded-md border border-text/20 bg-surface px-3 py-2 text-sm text-text">
+          Adaptation: <strong>{activeDisabilityPreset?.replaceAll('_', ' ').toUpperCase() ?? 'YOUR LEARNING PROFILE'}</strong>
+        </p>
       </header>
 
       <section aria-labelledby="worksheet-heading" className="rounded-xl border border-text/15 bg-surface p-4 sm:p-6">
-        <h2 id="worksheet-heading" className="mb-4 font-heading text-xl font-semibold">Make a worksheet easier to follow</h2>
-        <DocumentSimplifier initialOutputType="step_outline" />
+        <h2 id="worksheet-heading" className="mb-4 font-heading font-semibold">Worksheet support</h2>
+        <DocumentSimplifier initialOutputType="step_outline" embedded />
       </section>
 
       <TaskBreakdownPanel />
@@ -96,7 +103,7 @@ export function HomeworkHelp() {
       <section aria-labelledby="writing-heading" className="space-y-4 rounded-xl border border-text/15 bg-surface p-5 sm:p-7">
         <div>
           <h2 id="writing-heading" className="font-heading text-xl font-semibold">Writing support</h2>
-          <p className="mt-1 text-sm text-text/70">Your ideas stay yours. Helen offers a rough structure, not a finished essay.</p>
+          <p className="mt-1 text-sm text-muted">Your ideas stay yours. Helen offers a rough structure, not a finished essay.</p>
         </div>
         <label htmlFor="homework-question" className="block space-y-1 text-sm font-semibold">What is the assignment asking?
           <textarea id="homework-question" value={question} onChange={event => setQuestion(event.target.value)} rows={3} className="w-full resize-y rounded-md border border-text/25 bg-background p-3 font-normal focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" />
@@ -107,7 +114,7 @@ export function HomeworkHelp() {
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={dictateIdeas} className="min-h-11 rounded-md border border-primary px-4 py-2 font-semibold text-primary">Speak my ideas</button>
           <button type="button" onClick={() => { setPlannerOpen(value => !value); setError('') }} aria-expanded={plannerOpen} className="min-h-11 rounded-md border border-text/25 px-4 py-2">Essay planner</button>
-          <button type="button" onClick={() => void organizeIdeas()} disabled={busy} className="min-h-11 rounded-md bg-primary px-5 py-2 font-semibold text-white disabled:opacity-60">{busy ? 'Organizing your ideas…' : 'Help organize my ideas'}</button>
+          <button type="button" onClick={() => void organizeIdeas()} disabled={busy} className="min-h-11 rounded-md bg-primary px-5 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-muted disabled:opacity-100">{busy ? 'Organizing your ideas…' : 'Help organize my ideas'}</button>
           {speech.supported && preferences.tts.enabled && draft && <button type="button" onClick={() => speech.speakSegments(draft.split(/(?<=[.!?])\s+/))} className="min-h-11 rounded-md border border-text/25 px-4 py-2">Read draft aloud</button>}
         </div>
         {plannerOpen && (
@@ -119,7 +126,7 @@ export function HomeworkHelp() {
           </ol>
         )}
         {error && <p role="alert" className="rounded-md border border-text/20 bg-background p-3 text-sm">{error}</p>}
-        {busy && <p role="status" aria-live="polite" className="text-sm text-text/70">Putting your ideas into a clear order…</p>}
+        {busy && <p role="status" aria-live="polite" className="text-sm text-muted">Putting your ideas into a clear order…</p>}
         {draft && (
           <label htmlFor="homework-draft" className="block space-y-1 text-sm font-semibold">Your editable rough draft
             <textarea id="homework-draft" value={draft} onChange={event => setDraft(event.target.value)} rows={10} className="w-full resize-y rounded-md border border-text/25 bg-background p-3 font-normal leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary" />

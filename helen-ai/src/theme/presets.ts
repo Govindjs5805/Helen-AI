@@ -52,7 +52,7 @@ const BASE_TOKENS: Record<'light' | 'dark', ThemeTokens['colors']> = {
   },
 }
 
-const DEFAULT_FONT = 'Inter, system-ui, sans-serif'
+const DEFAULT_FONT = "'Lexend', system-ui, sans-serif"
 
 function layoutFlags(
   overrides: Partial<ThemeTokens['layout']> = {}
@@ -94,7 +94,7 @@ export const THEME_PRESETS: Record<ThemePresetName, ThemePreset> = {
   },
   adhd: {
     colors: {
-      background: '#FFFFFF',
+      background: '#F4F6FF',
       surface: '#FFFFFF',
       text: '#0B1020',
       primary: '#1E2F9E',
@@ -103,7 +103,7 @@ export const THEME_PRESETS: Record<ThemePresetName, ThemePreset> = {
     darkColors: {
       background: '#1E2F9E',
       surface: '#26378F',
-      text: '#FFFFFF',
+      text: '#F4F6FF',
       primary: '#C8F169',
       accent: '#C8F169',
     },

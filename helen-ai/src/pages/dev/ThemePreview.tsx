@@ -15,10 +15,23 @@ export function ThemePreview() {
   const [preset, setPreset] = useState<ThemePresetName | null>(null)
   const [theme, setTheme] = useState<Theme>('light')
   const tokens = getThemeTokens(preset, theme)
+  const mutedText = tokens.layout.forcesOwnContrast
+    ? tokens.colors.text
+    : preset === 'adhd'
+      ? theme === 'dark' ? '#C9D0F5' : '#39445F'
+      : theme === 'dark' ? '#C9D0F5' : '#48534D'
+  const secondarySurface = theme === 'dark'
+    ? preset === 'adhd' ? '#33469F' : '#1A241D'
+    : preset === 'adhd' ? '#E8ECF8' : '#E9ECE8'
   const pageStyle = {
     '--color-background': tokens.colors.background,
     '--color-surface': tokens.colors.surface,
     '--color-text': tokens.colors.text,
+    '--color-text-muted': mutedText,
+    '--color-surface-2': secondarySurface,
+    '--text': tokens.colors.text,
+    '--text-muted': mutedText,
+    '--surface-2': secondarySurface,
     '--color-primary': tokens.colors.primary,
     '--color-accent': tokens.colors.accent,
     '--font-family': tokens.font.family,
@@ -35,7 +48,8 @@ export function ThemePreview() {
     <main
       className="min-h-screen bg-background px-5 py-8 text-text sm:px-8"
       data-profile={preset ?? 'default'}
-      data-theme={theme}
+      data-theme={preset === 'adhd' ? 'adhd' : theme}
+      data-mode={theme}
       style={{
         ...pageStyle,
         fontFamily: tokens.font.family,

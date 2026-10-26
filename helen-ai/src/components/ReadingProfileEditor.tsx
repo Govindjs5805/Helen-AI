@@ -51,23 +51,23 @@ export function ReadingProfileEditor({ preferences, onChange, onPreset }: Readin
       <fieldset className="space-y-3">
         <legend className="text-sm font-semibold">Starting point</legend>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => onPreset('easy')} className="min-h-11 rounded-md border border-primary px-3 py-2 text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Easy reading</button>
-          <button type="button" onClick={() => onPreset('maximum')} className="min-h-11 rounded-md border border-primary px-3 py-2 text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Max support</button>
-          <button type="button" onClick={() => onPreset('custom')} className="min-h-11 rounded-md border border-primary px-3 py-2 text-sm font-medium text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Custom</button>
-          <button type="button" onClick={() => update('font', 'atkinson')} className="min-h-11 rounded-md border border-text/25 px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">Try 3 styles</button>
+          <button type="button" onClick={() => onPreset('easy')} className="min-h-11 rounded-xl border border-[#2875FB] px-3 py-2 text-sm font-medium text-[#1E3FB2] transition-colors hover:bg-[#2875FB] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Easy reading</button>
+          <button type="button" onClick={() => onPreset('maximum')} className="min-h-11 rounded-xl border border-[#2875FB] px-3 py-2 text-sm font-medium text-[#1E3FB2] transition-colors hover:bg-[#2875FB] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Max support</button>
+          <button type="button" onClick={() => onPreset('custom')} className="min-h-11 rounded-xl border border-[#2875FB] px-3 py-2 text-sm font-medium text-[#1E3FB2] transition-colors hover:bg-[#2875FB] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Custom</button>
+          <button type="button" onClick={() => update('font', 'atkinson')} className="min-h-11 rounded-xl border border-text/25 px-3 py-2 text-sm transition-colors hover:border-[#2875FB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]">Try 3 styles</button>
         </div>
       </fieldset>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="space-y-1 text-sm font-medium">
           Support level
-          <select value={preferences.severity} onChange={event => update('severity', event.target.value as ReadingPreferences['severity'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+          <select value={preferences.severity} onChange={event => update('severity', event.target.value as ReadingPreferences['severity'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="mild">Mild</option><option value="moderate">Moderate</option><option value="severe">Strong support</option>
           </select>
         </label>
         <label className="space-y-1 text-sm font-medium">
           Font
-          <select value={preferences.font} onChange={event => update('font', event.target.value as ReadingPreferences['font'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+          <select value={preferences.font} onChange={event => update('font', event.target.value as ReadingPreferences['font'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="lexend">Lexend</option><option value="atkinson">Atkinson Hyperlegible</option><option value="opendyslexic">OpenDyslexic</option><option value="verdana">Verdana</option><option value="system">System</option>
           </select>
         </label>
@@ -80,7 +80,7 @@ export function ReadingProfileEditor({ preferences, onChange, onPreset }: Readin
               background_tint,
               text_color: background_tint === 'dark' ? '#f5f5f5' : '#3b3b3b',
             })
-          }} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+          }} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="cream">Cream</option><option value="pale-yellow">Pale yellow</option><option value="pale-blue">Pale blue</option><option value="light-gray">Light gray</option><option value="white">White</option><option value="dark">Dark</option>
           </select>
         </label>
@@ -92,25 +92,25 @@ export function ReadingProfileEditor({ preferences, onChange, onPreset }: Readin
         <Range label="Line length" value={preferences.max_line_chars} min={50} max={70} step={1} suffix=" characters" onChange={value => update('max_line_chars', value)} />
         <label className="space-y-1 text-sm font-medium">
           Reading aid
-          <select value={preferences.reading_aid} onChange={event => update('reading_aid', event.target.value as ReadingPreferences['reading_aid'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+          <select value={preferences.reading_aid} onChange={event => update('reading_aid', event.target.value as ReadingPreferences['reading_aid'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="none">None</option><option value="ruler">Reading ruler</option><option value="focus-mask">Focus mask</option><option value="syllable-split">Syllable split</option>
           </select>
         </label>
         <label className="space-y-1 text-sm font-medium">
           Reading level
-          <select value={preferences.reading_level} onChange={event => update('reading_level', event.target.value as ReadingPreferences['reading_level'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+          <select value={preferences.reading_level} onChange={event => update('reading_level', event.target.value as ReadingPreferences['reading_level'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="auto">Automatic</option><option value="grade_4_5">Grade 4–5</option><option value="grade_6_8">Grade 6–8</option><option value="original">Original</option>
           </select>
         </label>
         <label className="space-y-1 text-sm font-medium">
           Content layout
-          <select value={preferences.density} onChange={event => update('density', event.target.value as ReadingPreferences['density'])} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+          <select value={preferences.density} onChange={event => update('density', event.target.value as ReadingPreferences['density'])} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="full">Full text</option><option value="chunked">Chunked</option><option value="bullets">Bullets</option>
           </select>
         </label>
         <label className="flex items-center justify-between gap-3 text-sm font-medium">
           Text color
-          <input type="color" value={preferences.text_color} onChange={event => update('text_color', event.target.value)} aria-label="Reading text color" className="h-11 w-16 rounded-md border border-text/25 bg-background p-1" />
+           <input type="color" value={preferences.text_color} onChange={event => update('text_color', event.target.value)} aria-label="Reading text color" className="h-11 w-16 rounded-xl border border-[#C3D7FC] bg-white p-1 dark:border-[#35518B] dark:bg-[#132653]" />
         </label>
       </div>
 
@@ -122,7 +122,7 @@ export function ReadingProfileEditor({ preferences, onChange, onPreset }: Readin
         <Range label="Pause between sentences" value={preferences.tts.pause_seconds} min={0} max={3} step={0.1} suffix=" seconds" onChange={value => update('tts', { ...preferences.tts, pause_seconds: value })} />
         <label className="space-y-1 text-sm font-medium">
           Voice
-          <select value={preferences.tts.voice} onChange={event => update('tts', { ...preferences.tts, voice: event.target.value })} className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2">
+           <select value={preferences.tts.voice} onChange={event => update('tts', { ...preferences.tts, voice: event.target.value })} className="min-h-11 w-full rounded-xl border border-[#C3D7FC] bg-white px-3 py-2.5 text-text shadow-sm transition-all focus:border-[#2875FB] focus:outline-none focus:ring-4 focus:ring-[#2875FB]/15 dark:border-[#35518B] dark:bg-[#132653]">
             <option value="">Browser default</option>
             {voices.map(voice => <option key={`${voice.name}-${voice.lang}`} value={voice.name}>{voice.name} ({voice.lang})</option>)}
           </select>
@@ -138,7 +138,7 @@ export function ReadingProfileEditor({ preferences, onChange, onPreset }: Readin
               type="button"
               onClick={() => update('font', font)}
               aria-pressed={preferences.font === font}
-              className="min-w-0 rounded-lg border border-text/20 bg-surface p-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="min-w-0 rounded-xl border border-[#C3D7FC] bg-surface p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#2875FB] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB] dark:border-[#39518f]"
               style={{ fontFamily: ({ atkinson: "'Atkinson Hyperlegible', Verdana, sans-serif", lexend: "'Lexend', Verdana, sans-serif", verdana: 'Verdana, sans-serif' })[font] }}
             >
               <span className="block text-xs font-semibold capitalize">{font}</span>
@@ -167,7 +167,7 @@ function Range({ label, value, min, max, step, suffix, onChange }: {
   return (
     <label className="space-y-1 text-sm font-medium">
       <span className="flex justify-between gap-2"><span>{label}</span><span aria-live="polite">{value}{suffix}</span></span>
-      <input type="range" min={min} max={max} step={step} value={value} onChange={event => onChange(Number(event.target.value))} className="w-full accent-primary" />
+      <input type="range" min={min} max={max} step={step} value={value} onChange={event => onChange(Number(event.target.value))} className="w-full accent-[#2875FB]" />
     </label>
   )
 }

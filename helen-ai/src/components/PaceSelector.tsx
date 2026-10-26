@@ -28,15 +28,15 @@ export function PaceSelector({ value, onChange }: PaceSelectorProps) {
             aria-checked={isSelected}
             onClick={() => onChange(pace.value)}
             className={[
-              'flex flex-col items-start gap-1 rounded-xl border p-4 text-left transition-colors',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60',
+              'flex flex-col items-start gap-1 rounded-xl border p-4 text-left transition-all duration-200 hover:-translate-y-0.5',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
               isSelected
                 ? [
-                    'border-primary bg-primary text-white shadow-sm shadow-primary/20',
+                    'border-[#2875FB] bg-[#2875FB] text-white shadow-lg shadow-[#2875FB]/20',
                   ].join(' ')
                 : [
-                    'border-black/10 bg-surface text-text hover:border-primary/40',
-                    'dark:border-white/15',
+                    'border-[#C3D7FC] bg-white text-[#030E50] hover:border-[#2875FB]/60',
+                    'dark:border-[#39518f] dark:bg-[#07133F] dark:text-white',
                   ].join(' '),
             ].join(' ')}
           >
@@ -44,7 +44,7 @@ export function PaceSelector({ value, onChange }: PaceSelectorProps) {
             <span
               className={[
                 'text-xs leading-relaxed',
-                isSelected ? 'text-white/75' : 'text-text/55',
+                 isSelected ? 'text-white/75' : 'text-[#63709A] dark:text-[#C3D7FC]/70',
               ].join(' ')}
             >
               {pace.description}

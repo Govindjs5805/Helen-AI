@@ -5,6 +5,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { apiFetch } from '@/services/api'
 import { HelenMascot } from '@/components/adhd/HelenMascot'
 import { AdhdDecorations } from '@/components/adhd/AdhdDecorations'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 interface Message {
   text: string
@@ -133,16 +134,17 @@ export function AIAssistant() {
   ]
 
   return (
-    <div className="relative min-h-[calc(100dvh-5rem)] w-full overflow-hidden text-slate-900 transition-colors duration-200 dark:text-white">
+    <div className="relative min-h-[calc(100dvh-5rem)] w-full overflow-hidden bg-[#EEF4FC] text-slate-900 transition-colors duration-200 dark:bg-[#070D24] dark:text-white">
       {/* Background 3D & Doodle Decorations */}
       <AdhdDecorations />
 
       <div className="relative z-10 mx-auto flex w-full max-w-md flex-col justify-between space-y-5 px-1 py-3 sm:px-0">
         {/* Top Header matching Screen 2 */}
-        <header className="text-center">
+        <header className="flex items-center justify-between px-1">
           <p className="text-sm font-semibold tracking-wide text-slate-500 dark:text-[#8E9EC5]">
             Ask in your own words.
           </p>
+          <ThemeToggle />
         </header>
 
         {checkInReady && (
@@ -162,7 +164,7 @@ export function AIAssistant() {
         {messages.length === 0 ? (
           <div className="my-auto flex flex-col items-center justify-center space-y-6 text-center">
             {/* Cute 3D Helen Mascot with glowing aura */}
-            <HelenMascot mood="happy" className="h-44 w-36" waving={true} />
+            <HelenMascot mood="happy" className="h-48 w-44" waving={true} />
 
             <div className="space-y-1.5">
               <h1 className="font-display text-2xl font-bold tracking-tight text-slate-900 dark:text-white">

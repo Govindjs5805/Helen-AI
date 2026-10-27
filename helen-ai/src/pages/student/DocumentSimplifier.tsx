@@ -6,6 +6,7 @@ import { useTextToSpeech } from '@/hooks/useTextToSpeech'
 import { useReadingTheme } from '@/context/ReadingThemeContext'
 import { apiBaseUrl, apiFetch } from '@/services/api'
 import { AdhdDecorations } from '@/components/adhd/AdhdDecorations'
+import { ThemeToggle } from '@/components/ThemeToggle'
 
 type DocumentStatus = 'processing' | 'done' | 'failed'
 type SourceType = 'pdf' | 'image' | 'text'
@@ -703,28 +704,33 @@ export function DocumentSimplifier({ preview = false, initialOutputType = 'simpl
   const isAdhd = preset === 'adhd' || adhdEnabled
 
   return (
-    <div className="relative mx-auto w-full max-w-6xl space-y-7 text-text">
+    <div className={`relative mx-auto w-full max-w-6xl space-y-7 transition-colors duration-200 ${isAdhd ? 'text-slate-900 dark:text-white' : 'text-text'}`}>
       {isAdhd && <AdhdDecorations />}
 
       {!embedded && (
         <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#8E9EC5]">
-              DOCUMENT SIMPLIFIER
-            </p>
-            <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
-              Your documents
-            </h1>
-            <p className="mt-1 max-w-xl text-sm font-medium text-slate-500 dark:text-[#8E9EC5]">
-              Your text is adapted to suit your learning processes.
-            </p>
-            {isAdhd ? (
-              <div className="mt-3">
-                <span className="adhd-badge-cyan inline-flex items-center rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wide">
-                  Adaptation: ADHD
-                </span>
-              </div>
-            ) : null}
+          <div className="flex w-full items-start justify-between">
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-[#8E9EC5]">
+                DOCUMENT SIMPLIFIER
+              </p>
+              <h1 className="mt-1 font-heading text-2xl font-bold text-slate-900 sm:text-3xl dark:text-white">
+                Your documents
+              </h1>
+              <p className="mt-1 max-w-xl text-sm font-medium text-slate-500 dark:text-[#8E9EC5]">
+                Your text is adapted to suit your learning processes.
+              </p>
+              {isAdhd ? (
+                <div className="mt-3">
+                  <span className="adhd-badge-cyan inline-flex items-center rounded-full px-4 py-1.5 text-xs font-bold uppercase tracking-wide">
+                    Adaptation: ADHD
+                  </span>
+                </div>
+              ) : null}
+            </div>
+            <div className="shrink-0 pl-3">
+              <ThemeToggle />
+            </div>
           </div>
           {!isAdhd && (
             <p className="shrink-0 self-start rounded-md border border-text/20 bg-surface px-3 py-2 text-sm text-text">

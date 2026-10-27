@@ -26,7 +26,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <div className="flex min-h-dvh w-full overflow-x-clip bg-background text-text">
+    <div className={`flex min-h-dvh w-full overflow-x-clip transition-colors duration-200 ${
+      adhdEnabled
+        ? 'bg-[#EEF4FC] text-slate-900 dark:bg-[#070D24] dark:text-white'
+        : 'bg-background text-text'
+    }`}>
       {!focusMode && <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />}
 
       {/* Overlay for mobile when sidebar is open */}

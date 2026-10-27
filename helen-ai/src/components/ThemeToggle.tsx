@@ -23,9 +23,10 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
       title={hideThemeToggle ? 'Optimized for visual accessibility' : undefined}
     >
       <button
+        type="button"
         onClick={handleClick}
         disabled={isAnimating || hideThemeToggle}
-        className={`relative inline-flex h-12 w-12 items-center justify-center rounded-full border border-text/25 bg-surface text-text transition-colors hover:bg-surface-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-100 ${className}`}
+        className={`relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dark:border-white/10 dark:bg-[#0E1A3C] dark:text-white dark:hover:bg-[#142350] disabled:cursor-not-allowed disabled:opacity-100 ${className}`}
         aria-label={hideThemeToggle
           ? 'Optimized for visual accessibility'
           : isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -38,7 +39,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
               exit={{ rotate: 90, opacity: 0, scale: 0.5 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: 'easeInOut' }}
-              className="text-yellow-400"
+              className="text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.6)]"
             >
               <SunIcon />
             </motion.span>
@@ -49,7 +50,7 @@ export function ThemeToggle({ className = '' }: { className?: string }) {
               animate={{ rotate: 0, opacity: 1, scale: 1 }}
               exit={{ rotate: -90, opacity: 0, scale: 0.5 }}
               transition={{ duration: prefersReducedMotion ? 0 : 0.25, ease: 'easeInOut' }}
-              className="text-text"
+              className="text-[#2563EB]"
             >
               <MoonIcon />
             </motion.span>

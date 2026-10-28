@@ -190,7 +190,7 @@ export function Classrooms() {
               value={classroomName}
               onChange={event => setClassroomName(event.target.value)}
               placeholder="e.g. Room 12"
-              className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             />
           </div>
           <div className="space-y-1.5">
@@ -202,14 +202,14 @@ export function Classrooms() {
               value={subject}
               onChange={event => setSubject(event.target.value)}
               placeholder="e.g. Science"
-              className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 text-text placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             />
           </div>
           {createError && <p role="alert" className="text-sm text-red-700">{createError}</p>}
           <button
             type="submit"
             disabled={creatingClassroom}
-            className="min-h-11 w-full rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait disabled:opacity-60"
+            className="min-h-11 w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-wait disabled:opacity-60"
           >
             {creatingClassroom ? 'Creating…' : 'Create classroom'}
           </button>
@@ -238,7 +238,7 @@ export function Classrooms() {
                     setAddError('')
                     setAddMessage('')
                   }}
-                  className={`min-h-11 rounded-md border px-3 py-2 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selectedClassroomId === classroom.id ? 'border-primary bg-primary text-white' : 'border-text/20 bg-background text-text'}`}
+                  className={`min-h-11 rounded-md border px-3 py-2 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${selectedClassroomId === classroom.id ? 'border-blue-500 bg-blue-600 text-white hover:bg-blue-700' : 'border-text/20 bg-background text-text hover:border-blue-400'}`}
                 >
                   <span className="block font-semibold">{classroom.name}</span>
                   <span className={`block text-xs ${selectedClassroomId === classroom.id ? 'text-white/85' : 'text-text/70'}`}>
@@ -274,18 +274,18 @@ export function Classrooms() {
                 placeholder="HAI-2026-0001"
                 autoCapitalize="characters"
                 autoComplete="off"
-                className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 font-mono text-text placeholder:font-sans placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="min-h-11 w-full rounded-md border border-text/25 bg-background px-3 py-2 font-mono text-text placeholder:font-sans placeholder:text-text/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               />
             </div>
             <button
               type="submit"
               disabled={addingStudent}
-              className="min-h-11 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-wait disabled:opacity-60"
+              className="min-h-11 rounded-md bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-wait disabled:opacity-60"
             >
               {addingStudent ? 'Adding…' : 'Add student'}
             </button>
             {addError && <p role="alert" className="text-sm text-red-700 sm:col-span-2">{addError}</p>}
-            {addMessage && <p role="status" className="text-sm text-primary sm:col-span-2">{addMessage}</p>}
+            {addMessage && <p role="status" className="text-sm text-blue-600 dark:text-blue-300 sm:col-span-2">{addMessage}</p>}
           </form>
 
           {loadError && <p role="alert" className="text-sm text-red-700">{loadError}</p>}
@@ -313,7 +313,7 @@ export function Classrooms() {
                       <td className="px-4 py-3">
                         <Link
                           to={`/student-progress?studentId=${encodeURIComponent(student.student_id)}`}
-                          className="inline-flex min-h-10 items-center rounded px-2 font-medium text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                          className="inline-flex min-h-10 items-center rounded px-2 font-medium text-blue-600 underline underline-offset-4 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
                         >
                           View progress
                         </Link>

@@ -193,7 +193,7 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
                 to={item.href}
                 className={`flex min-h-[3.5rem] flex-1 flex-col items-center justify-center gap-1 rounded-2xl px-1 py-1 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                   isActive
-                    ? 'text-[#2563EB] font-bold dark:text-[#05FF85]'
+                    ? 'text-[#2563EB] font-bold dark:text-blue-300'
                     : 'text-slate-400 hover:text-slate-700 dark:text-[#7A8BB5] dark:hover:text-white'
                 }`}
                 aria-label={item.label}
@@ -201,7 +201,7 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
               >
                 <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
                   isActive
-                    ? 'bg-blue-50 dark:bg-[#05FF85]/15 dark:shadow-[0_0_12px_rgba(5,255,133,0.3)]'
+                    ? 'bg-blue-50 dark:bg-blue-400/15 dark:shadow-[0_0_12px_rgba(59,130,246,0.3)]'
                     : ''
                 }`}>
                   <item.icon className="h-5 w-5" aria-hidden="true" />
@@ -240,7 +240,7 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
                         onClick={() => setMoreOpen(false)}
                         className={`flex min-h-11 items-center rounded-xl px-3 py-2 text-sm font-semibold transition-colors ${
                           isActive
-                            ? 'bg-blue-50 text-[#2563EB] dark:bg-[#142350] dark:text-[#05FF85]'
+                            ? 'bg-blue-50 text-[#2563EB] dark:bg-[#142350] dark:text-blue-300'
                             : 'text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-white/5'
                         }`}
                         aria-current={isActive ? 'page' : undefined}

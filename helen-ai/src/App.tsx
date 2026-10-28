@@ -153,7 +153,7 @@ export default function App() {
         element={
           <OnboardingGuard>
             <AppShell>
-              {profile?.role === 'teacher' ? <TeacherDashboard /> : <Classrooms />}
+              <Classrooms />
             </AppShell>
           </OnboardingGuard>
         }

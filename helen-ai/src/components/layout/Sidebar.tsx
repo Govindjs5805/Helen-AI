@@ -228,8 +228,8 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
         {/* User info & theme toggle */}
         <div className="hidden border-t border-black/10 px-4 py-4 dark:border-white/10 md:group-hover/sidebar:block lg:block">
           <div className="mb-3 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-sm font-medium text-primary">
+            <div className={`h-9 w-9 rounded-full flex items-center justify-center ${isTeacher ? 'bg-blue-500/15' : 'bg-primary/20'}`}>
+              <span className={`text-sm font-medium ${isTeacher ? 'text-blue-700 dark:text-blue-300' : 'text-primary'}`}>
                 {profile?.full_name?.charAt(0) || profile?.email?.charAt(0) || 'U'}
               </span>
             </div>

@@ -461,3 +461,25 @@ textarea::placeholder {
 }
 
 
+
+/* Teacher workspace dark mode: keep remaining green utility accents on-brand blue. */
+:root.dark body :where(
+  [class*="bg-green-"], [class*="bg-emerald-"], [class*="bg-lime-"]
+) {
+  background-color: rgb(37 99 235 / 0.18) !important;
+}
+:root.dark body :where(
+  [class*="text-green-"], [class*="text-emerald-"], [class*="text-lime-"]
+) {
+  color: #93C5FD !important;
+}
+:root.dark body :where(
+  [class*="border-green-"], [class*="border-emerald-"], [class*="border-lime-"]
+) {
+  border-color: rgb(96 165 250 / 0.45) !important;
+}
+:root.dark body :where(
+  [class*="ring-green-"], [class*="ring-emerald-"], [class*="ring-lime-"]
+) {
+  --tw-ring-color: rgb(96 165 250 / 0.5) !important;
+}

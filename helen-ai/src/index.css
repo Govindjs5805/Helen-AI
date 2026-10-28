@@ -94,8 +94,8 @@
   --color-surface-2: #14244E;
   --color-text: #F4F8FF;
   --color-text-muted: #8E9EC5;
-  --color-primary: #05FF85;
-  --color-accent: #00E5FF;
+  --color-primary: #60A5FA;
+  --color-accent: #93C5FD;
   --text: #F4F8FF;
   --text-muted: #8E9EC5;
   --surface-2: #14244E;
@@ -192,11 +192,15 @@
 }
 
 :root.dark {
-  --color-background: #0B120D;
-  --color-surface: #131B15;
-  --color-primary: #4ADE80;
-  --color-accent: #7ED957;
-  --color-text: #E7F5EC;
+  --color-background: #071329;
+  --color-surface: #0D1B36;
+  --color-primary: #3B82F6;
+  --color-accent: #60A5FA;
+  --color-text: #EAF2FF;
+  --color-text-muted: #A7B8D8;
+  --text: #EAF2FF;
+  --text-muted: #A7B8D8;
+  --surface-2: #142747;
 }
 
 body {
@@ -370,7 +374,7 @@ textarea::placeholder {
   color: #000000 !important;
 }
 :root.dark:not([data-forces-own-contrast="true"]) body :where(.bg-primary:not(:disabled), .bg-primary:not(:disabled) *) {
-  color: #0B120D !important;
+  color: #FFFFFF !important;
 }
 :root[data-forces-own-contrast="true"] input::placeholder,
 :root[data-forces-own-contrast="true"] textarea::placeholder {
@@ -384,14 +388,14 @@ textarea::placeholder {
 }
 :root[data-mode="dark"] .adhd-glow-btn,
 :root.dark .adhd-glow-btn {
-  background-color: #05FF85;
-  color: #060B1E;
-  box-shadow: 0 0 24px rgba(5, 255, 133, 0.45);
+  background-color: #3B82F6;
+  color: #FFFFFF;
+  box-shadow: 0 0 24px rgba(59, 130, 246, 0.35);
 }
 :root[data-mode="dark"] .adhd-glow-btn:hover,
 :root.dark .adhd-glow-btn:hover {
-  background-color: #26ff95;
-  box-shadow: 0 0 32px rgba(5, 255, 133, 0.6);
+  background-color: #2563EB;
+  box-shadow: 0 0 32px rgba(59, 130, 246, 0.45);
 }
 :root[data-mode="light"] .adhd-glow-btn,
 :root:not(.dark) .adhd-glow-btn {
@@ -423,17 +427,17 @@ textarea::placeholder {
 }
 
 .adhd-badge-cyan {
-  background-color: rgba(0, 229, 255, 0.12);
-  color: #00E5FF;
-  border: 1px solid rgba(0, 229, 255, 0.35);
-  box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #60A5FA;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.2);
 }
 :root[data-mode="dark"] .adhd-badge-cyan,
 :root.dark .adhd-badge-cyan {
-  background-color: rgba(0, 229, 255, 0.12);
-  color: #00E5FF;
-  border: 1px solid rgba(0, 229, 255, 0.35);
-  box-shadow: 0 0 14px rgba(0, 229, 255, 0.25);
+  background-color: rgba(59, 130, 246, 0.12);
+  color: #93C5FD;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  box-shadow: 0 0 14px rgba(59, 130, 246, 0.2);
 }
 :root[data-mode="light"] .adhd-badge-cyan,
 :root:not(.dark) .adhd-badge-cyan {

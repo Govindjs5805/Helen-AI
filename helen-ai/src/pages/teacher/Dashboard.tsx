@@ -6,7 +6,7 @@ import { supabase } from '@/services/supabase'
 
 interface TeacherDetails { institute_name: string; place: string; designation: string | null }
 interface Classroom { id: string; name: string; subject: string; created_at: string; student_count: number | null }
-const gradients = ['from-blue-600 to-indigo-600', 'from-sky-500 to-cyan-600', 'from-violet-500 to-indigo-600', 'from-teal-500 to-emerald-600']
+const gradients = ['from-blue-600 to-indigo-600', 'from-sky-500 to-blue-600', 'from-violet-500 to-indigo-600', 'from-indigo-500 to-blue-700']
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('').toUpperCase()
 
 export function Dashboard() {

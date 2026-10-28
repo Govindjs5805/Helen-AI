@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CalendarDays, ClipboardList, BookOpen, Clock3 } from 'lucide-react'
 import { supabase } from '@/services/supabase'
-import { useAuth } from '@/context/AuthContext'
 
 interface AssignmentRow {
   id: string
@@ -13,7 +12,6 @@ interface AssignmentRow {
 }
 
 export function Assignments() {
-  const { profile } = useAuth()
   const [items, setItems] = useState<AssignmentRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')

@@ -142,8 +142,11 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
   const role = profile?.role || 'student'
   const items = NAV_ITEMS[role as keyof typeof NAV_ITEMS] || NAV_ITEMS.student
 
-  const visible = items.slice(0, maxVisible)
-  const overflow = items.slice(maxVisible)
+  // On phones the sidebar footer is hidden, so teachers need a visible More
+  // menu for their profile, theme toggle, and logout action.
+  const visibleCount = role === 'teacher' ? Math.min(3, maxVisible) : maxVisible
+  const visible = items.slice(0, visibleCount)
+  const overflow = items.slice(visibleCount)
 
   const activeHref = items.find(i =>
     location.pathname === i.href || (i.href === '/dashboard' && location.pathname === '/')
@@ -230,7 +233,23 @@ export function MobileBottomNav({ maxVisible = 4 }: { maxVisible?: number }) {
               </button>
 
               {moreOpen && (
-                <div className="absolute bottom-full right-0 z-50 mb-4 max-h-[60dvh] w-56 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xl dark:border-white/10 dark:bg-[#0E1A3C]">
+                <div className="absolute bottom-full right-0 z-50 mb-4 max-h-[70dvh] w-64 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-[#0E1A3C]">
+                  {role === 'teacher' && (
+                    <div className="mb-2 flex items-center gap-3 rounded-xl bg-blue-50 p-3 dark:bg-blue-500/10">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+                        {(profile?.full_name || profile?.email || 'T').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-slate-900 dark:text-white">
+                          {profile?.full_name || 'Teacher'}
+                        </p>
+                        <p className="truncate text-xs text-slate-600 dark:text-slate-300">
+                          {profile?.email || ''}
+                        </p>
+                        <p className="text-xs font-medium text-blue-700 dark:text-blue-300">Teacher account</p>
+                      </div>
+                    </div>
+                  )}
                   {overflow.map(item => {
                     const isActive = activeHref === item.href
                     return (

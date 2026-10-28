@@ -136,7 +136,7 @@ export function ClassroomDetail() {
     </section>
 
     {loadError && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-100">{loadError}</p>}
-    {assignmentMessage && <p role="status" className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200"><CheckCircle2 size={17}/>{assignmentMessage}</p>}
+    {assignmentMessage && <p role="status" className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200"><CheckCircle2 size={17}/>{assignmentMessage}</p>}
 
     {assignmentFormOpen && <form onSubmit={postAssignment} className="rounded-2xl border border-blue-200 bg-surface p-5 shadow-sm dark:border-blue-900 sm:p-6">
       <div className="flex items-start gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"><Send size={19}/></span><div><h2 className="text-lg font-bold">Post an assignment</h2><p className="mt-1 text-sm text-text/65">This activity will be attached to {classroom.name}.</p></div></div>

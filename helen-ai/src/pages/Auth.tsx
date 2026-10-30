@@ -87,7 +87,7 @@ function FormInput({
   const isPassword = type === 'password'
   return (
     <div className="flex flex-col gap-2">
-      <label htmlFor={id} className="text-xs font-bold tracking-wide text-[#030E50] dark:text-[#C3D7FC]">
+      <label htmlFor={id} className="text-[0.7rem] font-black uppercase tracking-[0.12em] text-[#030E50] dark:text-[#C3D7FC]">
         {label}
       </label>
       <div className="relative">
@@ -101,12 +101,12 @@ function FormInput({
           aria-invalid={hasError}
           aria-describedby={hasError ? `${id}-error` : undefined}
           className={[
-            'w-full rounded-xl border bg-white px-4 py-3.5 text-sm text-[#030E50] transition-all placeholder:text-[#63709A]/60 dark:bg-[#132653] dark:text-[#EEF3FF] dark:placeholder:text-[#C3D7FC]/45',
-            'focus-visible:border-[#2875FB] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#2875FB]/15',
+            'h-[3.25rem] w-full rounded-2xl border bg-[#F8FBFF] px-4 text-sm text-[#030E50] shadow-[inset_0_1px_2px_rgba(3,14,80,0.03)] transition-all placeholder:text-[#63709A]/60 dark:bg-[#132653] dark:text-[#EEF3FF] dark:placeholder:text-[#C3D7FC]/45',
+            'focus-visible:border-[#2875FB] focus-visible:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#2875FB]/15 focus-visible:shadow-[0_8px_20px_rgba(40,117,251,0.08)]',
             isPassword ? 'pr-12' : '',
             hasError
               ? 'border-red-500/70 focus-visible:ring-red-500/20'
-              : 'border-[#C3D7FC] dark:border-[#39518f]',
+               : 'border-[#D8E4F5] dark:border-[#39518f]',
           ].join(' ')}
         />
         {isPassword && onTogglePassword && (
@@ -115,7 +115,7 @@ function FormInput({
             onClick={onTogglePassword}
             aria-label={showPassword ? 'Hide password' : 'Show password'}
             aria-pressed={showPassword}
-            className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#1E3FB2] transition-colors hover:bg-[#C3D7FC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB] dark:text-[#C3D7FC] dark:hover:bg-[#1E3FB2]/40"
+            className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-[#1E3FB2] transition-colors hover:bg-[#C3D7FC]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB] dark:text-[#C3D7FC] dark:hover:bg-[#1E3FB2]/40"
           >
             {showPassword ? (
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -169,13 +169,13 @@ function SubmitButton({
       disabled={isLoading}
       whileTap={{ scale: 0.97 }}
       className={[
-        'relative flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-colors',
+        'relative flex min-h-[3.4rem] w-full items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-sm font-black transition-all',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/60',
         isSuccess
           ? 'bg-emerald-500 text-white'
           : isError
           ? 'bg-red-500/90 text-white hover:bg-red-500'
-          : 'bg-[#2875FB] text-white shadow-lg shadow-[#2875FB]/20 hover:bg-[#1E3FB2]',
+          : 'bg-gradient-to-r from-[#2875FB] to-[#1267EC] text-white shadow-[0_14px_28px_rgba(40,117,251,0.25)] hover:-translate-y-0.5 hover:shadow-[0_18px_32px_rgba(30,63,178,0.28)]',
         isLoading ? 'cursor-not-allowed opacity-80' : '',
       ].join(' ')}
     >
@@ -364,101 +364,126 @@ export function Auth() {
   }
 
   return (
-    <div className="relative flex min-h-dvh flex-col overflow-hidden bg-[#F7FAFF] text-[#030E50] dark:bg-[#07133F] dark:text-[#EEF3FF]">
-      {/* ── Navbar ─────────────────────────────────────────────────── */}
-      <header className="absolute right-0 top-0 z-20 p-4 sm:p-6">
+    <div className="relative min-h-dvh overflow-hidden bg-[#EAF2FF] px-0 py-0 text-[#030E50] dark:bg-[#030E50] dark:text-[#EEF3FF] sm:px-6 sm:py-6 lg:px-8">
+      <header className="absolute right-3 top-3 z-30 sm:right-6 sm:top-6 lg:right-8 lg:top-8">
         <ThemeToggle />
       </header>
 
-      {/* ── Split layout ──────────────────────────────────────────── */}
-      <main className="flex flex-1 flex-col lg:flex-row">
-        {/* Left panel — brand headline */}
-        <motion.div
+      <main className="flex min-h-dvh items-center justify-center sm:min-h-[calc(100dvh-3rem)]">
+        <motion.section
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="relative flex flex-col justify-center overflow-hidden bg-gradient-to-br from-[#030E50] via-[#10277e] to-[#1E3FB2] px-6 pb-12 pt-28 text-white lg:min-h-dvh lg:w-1/2 lg:px-16 lg:pb-0 lg:pt-20"
+          className="relative flex w-full max-w-[1240px] flex-col overflow-hidden rounded-none bg-white shadow-none dark:bg-[#0B1A4A] lg:h-[820px] lg:flex-row lg:rounded-[3rem] lg:shadow-[0_34px_100px_rgba(3,14,80,0.24)] dark:lg:shadow-black/45"
         >
-          <motion.div
-            aria-hidden="true"
-            animate={{ y: [0, -18, 0], rotate: [0, 5, 0] }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-            className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full border border-[#C3D7FC]/35 shadow-[0_0_0_24px_rgba(195,215,252,0.06),0_0_0_52px_rgba(195,215,252,0.05)]"
-          />
-          <motion.div
-            aria-hidden="true"
-            animate={{ y: [0, 14, 0], rotate: [-12, -5, -12] }}
-            transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.7 }}
-            className="pointer-events-none absolute bottom-16 left-12 h-28 w-28 rounded-[40%_60%_58%_42%] bg-[#C3D7FC]/15"
-          />
-          <motion.div variants={slideUpFade}>
-            <img
-              src={`${import.meta.env.BASE_URL}pwa-192x192.png`}
-              alt=""
-              className="mb-8 h-12 w-12 rounded-2xl object-cover shadow-lg shadow-black/20"
+          <motion.aside
+            variants={slideUpFade}
+            className={[
+              'relative z-20 order-1 h-[25rem] w-full shrink-0 overflow-hidden bg-gradient-to-br from-[#031451] via-[#0B4FCB] to-[#073A9C] text-white',
+              'rounded-b-[2.5rem] transition-transform duration-1000 ease-out lg:absolute lg:inset-y-0 lg:left-0 lg:h-full lg:w-1/2 lg:rounded-[2.75rem]',
+              mode === 'register'
+                ? 'lg:translate-x-full'
+                : 'lg:translate-x-0',
+            ].join(' ')}
+          >
+            <motion.div
+              aria-hidden="true"
+              animate={{ x: [0, 16, 0], y: [0, -10, 0] }}
+              transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
+              className="pointer-events-none absolute -right-20 -top-24 h-64 w-80 rounded-[50%] bg-[#28B8FF]/25 blur-[1px]"
             />
-          </motion.div>
+            <div className="pointer-events-none absolute -bottom-24 -left-10 h-48 w-[120%] rounded-[50%] bg-[#061D70]/80" aria-hidden="true" />
 
-          <motion.h1
-            variants={slideUpFade}
-            className="relative font-heading text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl"
-          >
-            Helen AI
-          </motion.h1>
+            <div className="absolute left-6 top-6 z-10 flex items-center gap-3 sm:left-8 sm:top-8">
+              <img
+                src={`${import.meta.env.BASE_URL}apple-touch-icon.png`}
+                alt=""
+                className="h-10 w-10 rounded-xl object-cover shadow-sm"
+              />
+              <span className="text-base font-black tracking-tight">Helen AI</span>
+            </div>
 
-          <motion.p
-            variants={slideUpFade}
-            className="relative mt-5 max-w-md text-lg leading-relaxed text-white/75 sm:text-xl"
-          >
-            Your study companion that actually gets where you&apos;re stuck.
-            Helen listens to what you need, explains it in a way that clicks,
-            and keeps you moving forward — not just answers.
-          </motion.p>
-        </motion.div>
+            <motion.div
+              key={`${mode}-message`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className={[
+                'absolute top-24 z-10 w-[42%] sm:top-32',
+                mode === 'login' ? 'right-7 sm:right-10' : 'left-7 sm:left-10',
+              ].join(' ')}
+            >
+              <h1 className="font-heading text-[1.8rem] font-bold leading-[0.98] tracking-[-0.06em] text-white sm:text-[2.35rem]">
+                {mode === 'login' ? (
+                  <>Glad to see you <span className="text-white">again!</span></>
+                ) : (
+                  <>Let&apos;s start your <span className="text-white">journey!</span></>
+                )}
+              </h1>
+              <p className="mt-3 text-xs leading-relaxed text-white/75 sm:text-sm">
+                {mode === 'login'
+                  ? 'Sign in to continue your learning journey with Helen.'
+                  : 'Learn smarter. Grow brighter. With Helen AI.'}
+              </p>
+            </motion.div>
 
-        {/* Right panel — auth card */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="flex items-center justify-center px-5 pb-12 pt-20 sm:px-8 lg:min-h-dvh lg:w-1/2 lg:px-16 lg:pt-8"
-        >
-          {/* Card — asymmetric radius + accent-green top border */}
+            <motion.img
+              key={`${mode}-speech`}
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.45, delay: 0.08 }}
+              src={`${import.meta.env.BASE_URL}${mode === 'login' ? 'auth-welcome-back.png' : 'auth-hello-there.png'}`}
+              alt={mode === 'login' ? 'Welcome back' : 'Hello there'}
+              className={[
+                'pointer-events-none absolute bottom-[50%] z-10 w-[38%] max-w-[13rem] object-contain drop-shadow-[0_8px_14px_rgba(3,14,80,0.2)] sm:w-[32%]',
+                mode === 'login'
+                  ? 'left-[4%] origin-bottom-left sm:left-[6%]'
+                  : 'right-[4%] origin-bottom-right sm:right-[6%]',
+              ].join(' ')}
+            />
+
+            <motion.img
+              key={mode}
+              initial={{ opacity: 0, y: 18, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.75, ease: [0.22, 1, 0.36, 1] }}
+              src={`${import.meta.env.BASE_URL}auth-${mode === 'login' ? 'login-mascot.png' : 'register-mascot.png'}`}
+              onError={event => {
+                event.currentTarget.src = `${import.meta.env.BASE_URL}mascot-blue.png`
+              }}
+              alt="Helen mascot"
+              className="absolute bottom-[-2.25rem] left-1/2 z-[1] w-[54%] max-w-[24rem] -translate-x-1/2 object-contain drop-shadow-[0_18px_20px_rgba(0,0,0,0.25)] sm:bottom-[-2.5rem] sm:w-[72%]"
+            />
+          </motion.aside>
+
           <motion.div
             variants={slideUpFade}
             className={[
-              'relative w-full max-w-md overflow-hidden rounded-[2rem] border border-[#C3D7FC] border-t-4 border-t-[#2875FB]',
-              'bg-white shadow-[0_24px_70px_rgba(3,14,80,0.14)] dark:border-[#263F7A] dark:bg-[#0B1A4A] dark:shadow-black/40',
-              // Asymmetric radius: more on top-right than the rest of the card.
-              'rounded-tr-[3rem]',
-              // Subtle inner border overlay to separate the asymmetric corner from the card body.
-              'after:pointer-events-none after:absolute after:inset-0',
-              'after:rounded-[2rem] after:rounded-tr-[3rem]',
-               'after:border after:border-[#C3D7FC]/40 dark:after:border-white/10',
+              'relative z-10 order-2 flex min-h-[36rem] w-full flex-1 items-center overflow-y-auto bg-white px-6 py-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden dark:bg-[#0B1A4A] sm:px-10',
+              'rounded-none transition-transform duration-1000 ease-out lg:absolute lg:inset-y-0 lg:left-1/2 lg:h-full lg:w-1/2 lg:flex-none lg:rounded-[2.75rem] lg:px-[clamp(3rem,6vw,6rem)] lg:py-14',
+              mode === 'register'
+                ? 'lg:-translate-x-full'
+                : 'lg:translate-x-0',
             ].join(' ')}
           >
-            <div className="px-8 py-9 sm:px-10 sm:py-10">
-              {/* Mode toggle — pill segment control */}
-              <div className="mb-8 flex rounded-xl bg-[#EEF4FF] p-1 dark:bg-[#132653]">
-                {(['login', 'register'] as AuthMode[]).map(m => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => switchMode(m)}
-                    className={[
-                      'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200',
-                      mode === m
-                        ? 'bg-white text-[#030E50] shadow-sm dark:bg-[#1E3FB2] dark:text-white'
-                        : 'text-[#63709A] hover:text-[#030E50] dark:text-[#C3D7FC]/75 dark:hover:text-white',
-                    ].join(' ')}
-                  >
-                    {m === 'login' ? 'Sign in' : 'Create account'}
-                  </button>
-                ))}
-              </div>
+            <div className="mx-auto w-full max-w-[29rem]">
+              <motion.div
+                key={`${mode}-heading`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                <h2 className="font-heading text-[2.65rem] font-bold leading-none tracking-[-0.07em] text-[#030E50] dark:text-white sm:text-5xl">
+                  {mode === 'login' ? 'Sign in' : 'Create account'}
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-[#68769D] dark:text-[#C3D7FC]/70">
+                  {mode === 'login'
+                    ? <>Continue your learning journey with Helen <span aria-hidden="true">💙</span></>
+                    : <>Start your learning journey with Helen <span aria-hidden="true">💙</span></>}
+                </p>
+              </motion.div>
 
-              <form onSubmit={handleSubmit} noValidate className="space-y-5">
-                {/* Full name — register only */}
+              <form onSubmit={handleSubmit} noValidate className="mt-8 space-y-5">
                 {mode === 'register' && (
                   <motion.div
                     key="fullName"
@@ -500,48 +525,58 @@ export function Auth() {
                 <FormInput
                   id="password"
                   label="Password"
-                   type="password"
-                   value={password}
-                   onChange={v => {
-                     setPassword(v)
-                     if (passwordError) setPasswordError(validatePassword(v))
-                     if (confirmPasswordError) setConfirmPasswordError(validateConfirmPassword(confirmPassword, v))
-                   }}
+                  type="password"
+                  value={password}
+                  onChange={v => {
+                    setPassword(v)
+                    if (passwordError) setPasswordError(validatePassword(v))
+                    if (confirmPasswordError) setConfirmPasswordError(validateConfirmPassword(confirmPassword, v))
+                  }}
                   error={passwordError}
-                   placeholder={mode === 'register' ? 'At least 8 characters' : ''}
-                   autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                   showPassword={showPassword}
-                   onTogglePassword={() => setShowPassword(value => !value)}
-                 />
+                  placeholder={mode === 'register' ? 'At least 8 characters' : 'Your password'}
+                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword(value => !value)}
+                />
 
-                 {mode === 'register' && (
-                   <motion.div
-                     key="confirmPassword"
-                     initial={{ opacity: 0, height: 0 }}
-                     animate={{ opacity: 1, height: 'auto' }}
-                     exit={{ opacity: 0, height: 0 }}
-                     transition={{ duration: 0.25 }}
-                     className="overflow-hidden"
-                   >
-                     <FormInput
-                       id="confirmPassword"
-                       label="Confirm password"
-                       type="password"
-                       value={confirmPassword}
-                       onChange={value => {
-                         setConfirmPassword(value)
-                         setConfirmPasswordError(validateConfirmPassword(value, password))
-                       }}
-                       error={confirmPasswordError}
-                       placeholder="Re-enter your password"
-                       autoComplete="new-password"
-                       showPassword={showPassword}
-                       onTogglePassword={() => setShowPassword(value => !value)}
-                     />
-                   </motion.div>
-                 )}
+                {mode === 'login' && (
+                  <div className="-mt-2 flex justify-end">
+                    <button
+                      type="button"
+                      className="text-xs font-black text-[#1E3FB2] transition-colors hover:text-[#2875FB] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/50 dark:text-[#C3D7FC]"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                )}
 
-                {/* Role selector — register only, pill buttons */}
+                {mode === 'register' && (
+                  <motion.div
+                    key="confirmPassword"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <FormInput
+                      id="confirmPassword"
+                      label="Confirm password"
+                      type="password"
+                      value={confirmPassword}
+                      onChange={value => {
+                        setConfirmPassword(value)
+                        setConfirmPasswordError(validateConfirmPassword(value, password))
+                      }}
+                      error={confirmPasswordError}
+                      placeholder="Re-enter your password"
+                      autoComplete="new-password"
+                      showPassword={showPassword}
+                      onTogglePassword={() => setShowPassword(value => !value)}
+                    />
+                  </motion.div>
+                )}
+
                 {mode === 'register' && (
                   <motion.div
                     key="role"
@@ -552,7 +587,7 @@ export function Auth() {
                     className="overflow-hidden"
                   >
                     <fieldset>
-                      <legend className="mb-2.5 text-sm font-medium text-text">
+                      <legend className="mb-2.5 text-[0.7rem] font-black uppercase tracking-[0.12em] text-[#030E50] dark:text-[#C3D7FC]">
                         I am a
                       </legend>
                       <RoleSelector value={role} onChange={setRole} />
@@ -604,14 +639,13 @@ export function Auth() {
                   </motion.div>
                 )}
 
-                {/* Server-side error */}
                 {submitError && (
                   <motion.p
                     key="submitError"
                     initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     role="alert"
-                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400"
+                    className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400"
                   >
                     {submitError}
                   </motion.p>
@@ -620,10 +654,21 @@ export function Auth() {
                 <div className="pt-1">
                   <SubmitButton state={buttonState} mode={mode} />
                 </div>
+
+                <p className="pt-1 text-center text-xs text-[#68769D] dark:text-[#C3D7FC]/65">
+                  {mode === 'login' ? 'Don\'t have an account?' : 'Already have an account?'}{' '}
+                  <button
+                    type="button"
+                    onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
+                    className="font-black text-[#1E3FB2] transition-colors hover:text-[#2875FB] hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2875FB]/50 dark:text-[#C3D7FC]"
+                  >
+                    {mode === 'login' ? 'Create account' : 'Sign in'}
+                  </button>
+                </p>
               </form>
             </div>
           </motion.div>
-        </motion.div>
+        </motion.section>
       </main>
     </div>
   )
